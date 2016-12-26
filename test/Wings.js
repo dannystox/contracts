@@ -59,14 +59,12 @@ contract('Wings', (accounts) => {
       ).then(() => {
         return wings.getBaseProject.call(projectId);
       }).then((rawProject) => {
-        let bcProject = parser.parseProject(rawProject);
-        console.log(bcProject);
+        let bcProject = parser.parseBaseProject(rawProject);
 
         assert.notEqual(bcProject, null);
         assert.equal(bcProject.projectId, projectId);
         assert.equal(bcProject.name, project.name);
         assert.equal(bcProject.duration.toString(), project.duration.toString());
-        //assert.equal(bcProject.creator, creator);
       });
     }).then(done).catch(done);
 
@@ -83,7 +81,6 @@ contract('Wings', (accounts) => {
       assert.notEqual(project.logoHash, null);
       assert.notEqual(project.category, null);
       assert.notEqual(project.shortBlurb, null);
-      assert.equal(project.underReview, true);
     }).then(done).catch(done);
   });
 
@@ -126,11 +123,6 @@ contract('Wings', (accounts) => {
 
   });
 
-  it("Should be under review", (done) => {
-    wings.isUnderReview.call(projectId).then((underReview) => {
-      assert.equal(underReview, true);
-    }).then(done).catch(done);
-  });
 
   it("Should have 1 project", (done) => {
     wings.getCount.call().then((count) => {
@@ -267,42 +259,9 @@ contract('Wings', (accounts) => {
     });
   });
 
-  it("Should allow to change milestone while project under review", (done) => {
-    const user = accounts[1];
-    let items = "abc\n";
-    let amount = 1;
 
-    return wings.changeMilestone.sendTransaction(projectId, 0, chance.integer({min: 0, max: 1}), amount.toString(), items, {
-      from: user
-    }).catch(done).then(() => {
-      return wings.getMilestone.call(projectId, 0);
-    }).then((rawMilestone) => {
-      let milestoneObj = parser.parseMilestone(rawMilestone);
 
-      assert.equal(milestoneObj.amount.toString(), amount.toString());
-      assert.equal(milestoneObj.items, items);
-    }).then(done).catch(done);
-  });
-
-  it("Number of milestones should be equal 10", (done) => {
-    return wings.getMilestonesCount.call(projectId).then((n) => {
-      assert.equal(n.toString(), 10);
-    }).then(done).catch(done);
-  });
-
-  it("Should allow to remove milestone while project under review", (done) => {
-    const user = accounts[1];
-
-    return wings.removeMilestone.sendTransaction(projectId, 0, {
-      from: user
-    }).catch(done).then(() => {
-      return wings.getMilestonesCount.call(projectId, 0);
-    }).then((n) => {
-      assert.equal(n.toString(), (9).toString());
-    }).then(done).catch(done);
-  });
-
-  it("Should return correct milestones", (done) => {
+  it.skip("Should return correct milestones", (done) => {
     return wings.getMilestonesCount.call(projectId).then((rawN) => {
       let n = rawN.toNumber();
 
@@ -341,13 +300,13 @@ contract('Wings', (accounts) => {
     });
   });
 
-  it("Get project minimal goal", (done) => {
+  it.skip("Get project minimal goal", (done) => {
     return wings.getMinimalGoal.call(projectId).then((goal) => {
       assert.equal(goal.toString(), addedMilestones[0].amount.toString());
     }).then(done).catch(done);
   });
 
-  it("Get project cap", (done) => {
+  it.skip("Get project cap", (done) => {
     return wings.getCap.call(projectId).then((cap) => {
       return Promise.reduce(addedMilestones, (r, milestone) => {
         return new BigNumber(milestone.amount).add(r);
@@ -355,29 +314,6 @@ contract('Wings', (accounts) => {
         assert.equal(realCap.toString(), cap.toString());
       });
     }).then(done).catch(done);
-  });
-
-  it("Should move project to the forecast mode from review mode", (done) => {
-    const user = accounts[1];
-
-    return wings.closeReview.sendTransaction(projectId, 16, {
-      from: user
-    }).then((txId) => {
-      assert.notEqual(txId, null);
-    }).then(done).catch(done);
-  });
-
-  it("Shouldn't allow to change project milestones after project in forecasting mode", (done) => {
-    const user = accounts[1];
-
-    return wings.removeMilestone.sendTransaction(projectId, 0, {
-      from: user
-    }).then((txId) => {
-      assert.equal(1, null);
-    }).catch((err) => {
-      assert.notEqual(err, null);
-      done();
-    });
   });
 
   it.skip("Should allow to add forecast", (done) => {

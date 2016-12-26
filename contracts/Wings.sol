@@ -15,9 +15,7 @@ contract Wings {
   /*
     Milestone Events
    */
-  event MilestoneUpdated(bytes32 indexed id, uint milestoneId);
   event MilestoneAdded(bytes indexed id);
-  event MilestoneRemoved(bytes32 indexed id, uint milestoneId);
 
   /*
     Project Categories
@@ -83,16 +81,11 @@ contract Wings {
     bytes32 story; //hash of project story
 
     address creator; // creator of the projects
-    bool underReview; // project under review
-    bool underForecast; // project under forecast
 
     uint timestamp; // timestamp when project created
     bool cap; // project cupped under latest milestone
 
     uint milestonesCount; // amount of milestones
-
-    uint hoursToReview; // hours that allow to review
-    uint hoursToForecast; // hourse to allow to forecast
 
     mapping(uint => Milestone) milestones; // Milestones
   }
@@ -111,21 +104,20 @@ contract Wings {
     }
   }
 
-  modifier allowToChange(bytes32 projectId) {
+  modifier allowToAddMilestone(bytes32 projectId) {
     var project = projects[projectId];
 
-    if (project.underReview) {
+    if (block.timestamp < project.timestamp + 24 hours) {
       _;
     }
   }
-
 
   function Wings() {
     creator = msg.sender;
   }
 
-  function getHash(string data) returns (bytes32) {
-    return sha256(data);
+  function getProjectId(uint n) returns (bytes32) {
+    return projectsIds[n];
   }
 
   /*
@@ -158,10 +150,6 @@ contract Wings {
         throw;
       }
 
-      /*if (hoursToReview < 12 || hoursToReview > 36) {
-        throw;
-      }*/
-
       var project = Project(
         _projectId,
         _name,
@@ -175,13 +163,9 @@ contract Wings {
         _videolink,
         _story,
         msg.sender, // creator
-        true, // under review
-        false, // under forecasting
         block.timestamp, // timestamp
         cap, // cap
-        0, // milestones count
-        0, // hours to review
-        0 // hours to forecast
+        0 // milestones count
       );
 
       projects[_projectId] = project;
@@ -199,10 +183,10 @@ contract Wings {
       bytes32 logoHash,
       Categories category,
       bytes32 shortBlurb,
-      bool underReview,
       bool cap,
       uint duration,
-      uint goal
+      uint goal,
+      uint timestamp
     ) {
       var project = projects[id];
 
@@ -212,42 +196,34 @@ contract Wings {
           project.logoHash,
           project.category,
           project.shortBlurb,
-          project.underReview,
           project.cap,
           project.duration,
-          project.goal
+          project.goal,
+          project.timestamp
         );
     }
 
   function getProject(bytes32 id) returns (
       bytes32 projectId,
       string name,
-      bytes32 shortBlurb,
-      bytes32 logoHash,
-      Categories category,
       RewardTypes rewardType,
       uint rewardPercent,
-      uint duration,
-      uint goal,
       string videolink,
       bytes32 story,
-      address creator
+      address creator,
+      uint timestamp
     ) {
     var project = projects[id];
 
     return (
       project.id,
       project.name,
-      project.shortBlurb,
-      project.logoHash,
-      project.category,
       project.rewardType,
       project.rewardPercent,
-      project.duration,
-      project.goal,
       project.videolink,
       project.story,
-      project.creator
+      project.creator,
+      project.timestamp
     );
   }
 
@@ -281,15 +257,6 @@ contract Wings {
   }
 
   /*
-    Is project under review
-  */
-  function isUnderReview(bytes32 id) returns (bool) {
-    var project = projects[id];
-    return project.underReview;
-  }
-
-
-  /*
     Get count of projects
   */
   function getCount() returns (uint) {
@@ -299,7 +266,7 @@ contract Wings {
   /*
     Add milestone
   */
-  function addMilestone(bytes32 id, MilestoneType _type, uint amount, string _items) projectOwner(id) allowToChange(id) {
+  function addMilestone(bytes32 id, MilestoneType _type, uint amount, string _items) projectOwner(id) allowToAddMilestone(id) {
     var project = projects[id];
     if (project.creator == address(0) || project.milestonesCount == 10 || amount == 0) {
       throw;
@@ -325,44 +292,6 @@ contract Wings {
 
     var milestone = Milestone(id, _type, amount, items);
     project.milestones[project.milestonesCount++] = milestone;
-  }
-
-  function changeMilestone(bytes32 id, uint milestoneId, MilestoneType _type, uint amount, string items) projectOwner(id) allowToChange(id) {
-    var project = projects[id];
-
-    if (project.milestonesCount < milestoneId) {
-      throw;
-    }
-
-    project.milestones[milestoneId]._type = _type;
-    project.milestones[milestoneId].amount = amount;
-    project.milestones[milestoneId].items = getItemsFromString(items);
-
-    MilestoneUpdated(id, milestoneId);
-  }
-
-  /*
-    Remove milestone
-   */
-  function removeMilestone(bytes32 id, uint milestoneId) projectOwner(id) allowToChange(id) {
-    var project = projects[id];
-
-    if (project.milestonesCount == 0 || milestoneId > project.milestonesCount) {
-      throw;
-    }
-
-    delete project.milestones[milestoneId];
-
-    for (var i = milestoneId; i < project.milestonesCount; i++) {
-      if (i + 1 == project.milestonesCount) {
-        continue;
-      }
-
-      project.milestones[i] = project.milestones[i+1];
-    }
-
-    project.milestonesCount--;
-    MilestoneRemoved(id, milestoneId);
   }
 
   // get milestones count
@@ -421,43 +350,6 @@ contract Wings {
     }
 
     return amount;
-  }
-
-  /*
-    Setting hours to review
-  */
-  function setHoursToReview(bytes32 id, uint hoursToReview) projectOwner(id) allowToChange(id) {
-    var project = projects[id];
-
-    if (project.hoursToReview != 0) {
-      throw;
-    }
-
-    if (hoursToReview < 12 || hoursToReview > 36) {
-      throw;
-    }
-
-    project.hoursToReview = hoursToReview;
-  }
-
-  /*
-    Move to forecast period
-  */
-  function closeReview(bytes32 id, uint hoursToForecast) projectOwner(id) allowToChange(id) {
-    var project = projects[id];
-
-    if (hoursToForecast < 12 || hoursToForecast > 36) {
-      throw;
-    }
-
-    //if (block.timestamp >= project.timestamp + project.hoursToReview * 1 hours) {
-      project.hoursToForecast = hoursToForecast;
-      project.underReview = false;
-      project.underForecast = true;
-      ProjectReady(id, project.name);
-    //} else {
-    //  throw;
-    //}
   }
 
 
