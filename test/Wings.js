@@ -14,6 +14,7 @@ contract('Wings', (accounts) => {
   let wings, creator;
 
   let projectId, project, milestone;
+  let forecast;
 
   let addedMilestones;
 
@@ -83,6 +84,18 @@ contract('Wings', (accounts) => {
       assert.notEqual(project.shortBlurb, null);
     }).then(done).catch(done);
   });
+
+  it("Should return 1 my project", (done) => {
+    wings.getMyProjectsCount.call(creator).then((count) => {
+      assert.equal(count, 1);
+    }).then(done).catch(done);
+  });
+
+  it("Should return one my project", (done) => {
+    wings.getMyProjectId.call(creator, 0).then((_projectId) => {
+      assert.equal(_projectId, projectId);
+    }).then(done).catch(done);
+  })
 
   it("Should doesn't allow to change creator to another account from not owner account", (done) => {
     const user = accounts[1];
@@ -259,8 +272,6 @@ contract('Wings', (accounts) => {
     });
   });
 
-
-
   it.skip("Should return correct milestones", (done) => {
     return wings.getMilestonesCount.call(projectId).then((rawN) => {
       let n = rawN.toNumber();
@@ -316,20 +327,82 @@ contract('Wings', (accounts) => {
     }).then(done).catch(done);
   });
 
-  it.skip("Should allow to add forecast", (done) => {
 
-  });
 
-  it.skip("Should allow to change forecast", (done) => {
+    it("Should add forecast to the project", (done) => {
+      forecast = {
+        projectId: projectId,
+        raiting: 0,
+        message: "0x" + crypto.randomBytes(32).toString('hex')
+      }
 
-  });
+      return wings.addForecast.sendTransaction(
+        forecast.projectId,
+        forecast.raiting,
+        forecast.message,
+        {
+          from: creator
+        }
+      ).then((txId) => {
+        assert.notEqual(txId, null);
+      }).then(done).catch(done);
+    });
 
-  it.skip("Should allow ", (done) => {
+    it("Should return forecast equal to 1", (done) => {
+      return wings.getForecastCount.call(projectId).then((count) => {
+        assert.equal(count.toNumber(), 1);
+      }).then(done).catch(done);
+    });
 
-  });
+    it("Should get my one forecast", (done) => {
+      return wings.getForecast.call(projectId, 0).then((rawForecast) => {
+        let forecastInst = parser.parseForecast(rawForecast);
 
-  it.skip("Should allow to add project again while it's under review", (done) => {
+        assert.notEqual(forecastInst, null);
+        assert.equal(forecastInst.projectId, forecast.projectId);
+        assert.equal(forecastInst.creator, creator);
+        assert.equal(forecastInst.raiting, forecast.raiting);
+        assert.equal(forecastInst.message, forecast.message);
+      }).then(done).catch(done);
+    });
 
-  });
+    it("Shouldn't allow to add already exists forecast", (done) => {
+      return wings.addForecast.sendTransaction(
+        projectId,
+        1,
+        "0x" + crypto.randomBytes(32).toString('hex'),
+        {
+          from: creator
+        }
+      ).then(() => {
+        assert.equal(1, null);
+        done();
+      }).catch((err) => {
+        assert.notEqual(err, null);
+        done();
+      });
+    });
+
+    it("Should add forecast from another account", (done) => {
+      const user = accounts[1];
+
+      return wings.addForecast.sendTransaction(
+        projectId,
+        2,
+        "0x" + crypto.randomBytes(32),
+        {
+          from: user
+        }
+      ).then((txId) => {
+        assert.notEqual(txId, null);
+      }).then(done).catch(done);
+    });
+
+    it("Should contains two forecasts", (done) => {
+      return wings.getForecastCount.call(projectId).then((count) => {
+        assert.equal(count.toNumber(), 2);
+      }).then(done).catch(done);
+    });
+
 
 });

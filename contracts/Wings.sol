@@ -18,6 +18,15 @@ contract Wings {
   event MilestoneAdded(bytes indexed id);
 
   /*
+    Forecast type
+  */
+  enum ForecastRaiting {
+    Low,
+    Middle,
+    Top
+  }
+
+  /*
     Project Categories
    */
   enum Categories {
@@ -56,9 +65,11 @@ contract Wings {
   }
 
   struct Forecast {
-    address creator;
-    uint amount;
-    uint timestamp;
+    address creator;  // creator
+    bytes32 project; // project
+    ForecastRaiting raiting; // raiting
+    uint timestamp; // timestamp
+    bytes32 message; // message
   }
 
   /*
@@ -86,12 +97,19 @@ contract Wings {
     bool cap; // project cupped under latest milestone
 
     uint milestonesCount; // amount of milestones
+    uint forecastsCount;  // amount of forecasts
 
     mapping(uint => Milestone) milestones; // Milestones
+    mapping(uint => Forecast) forecasts; // Forecasts
   }
 
   mapping(bytes32 => Project) projects; // project by name hash to project object
   mapping(uint => bytes32) projectsIds; // project ids
+
+  mapping(address => mapping(uint => bytes32)) myProjectsIds; // my projects ids
+  mapping(address => uint) myProjectsCount; // my projects count
+
+  mapping(address => mapping(bytes32 => Forecast)) myForecasts; // my forecast to the project
 
   uint count; // amount of projects
   address creator; // creator of the contract
@@ -120,6 +138,14 @@ contract Wings {
     return projectsIds[n];
   }
 
+  function getMyProjectsCount(address owner) returns (uint) {
+    return myProjectsCount[owner];
+  }
+
+  function getMyProjectId(address owner, uint id) returns (bytes32) {
+    return myProjectsIds[owner][id];
+  }
+
   /*
     Publish project
   */
@@ -146,7 +172,7 @@ contract Wings {
         throw;
       }
 
-      if (_duration > 180 || _duration == 0) {
+      if (_duration > 180 || _duration < 30) {
         throw;
       }
 
@@ -165,11 +191,13 @@ contract Wings {
         msg.sender, // creator
         block.timestamp, // timestamp
         cap, // cap
-        0 // milestones count
+        0, // milestones count
+        0  // forecasts count
       );
 
       projects[_projectId] = project;
       projectsIds[count++] = _projectId;
+      myProjectsIds[msg.sender][myProjectsCount[msg.sender]++] = _projectId;
 
       ProjectCreation(msg.sender, _projectId, project.name);
       return true;
@@ -352,5 +380,84 @@ contract Wings {
     return amount;
   }
 
+  /*
+    Forecasting
+  */
+  function addForecast(bytes32 projectId, ForecastRaiting raiting, bytes32 message) {
+    var project = projects[projectId];
 
+    if (project.creator == address(0)) {
+      //throw;
+    }
+
+    if (myForecasts[msg.sender][projectId].creator != address(0)) {
+      //throw;
+    }
+
+    var forecast = Forecast(
+      msg.sender,
+      projectId,
+      raiting,
+      block.timestamp,
+      message
+    );
+
+    project.forecasts[project.forecastsCount++] = forecast;
+    myForecasts[msg.sender][projectId] = forecast;
+  }
+
+  /*
+    Get forecasts count
+  */
+  function getForecastCount(bytes32 projectId) returns (uint) {
+    var project = projects[projectId];
+    return project.forecastsCount;
+  }
+
+  /*
+    Get forecast by number
+    address creator;  // creator
+    bytes32 project; // project
+    ForecastRaiting raiting; // raiting
+    uint timestamp; // timestamp
+  */
+  function getForecast(bytes32 projectId, uint id) returns (
+      address _creator,
+      bytes32 _project,
+      ForecastRaiting _raiting,
+      uint _timestamp,
+      bytes32 _message
+    ) {
+      var project = projects[projectId];
+      var forecast = project.forecasts[id];
+
+      return (
+        forecast.creator,
+        forecast.project,
+        forecast.raiting,
+        forecast.timestamp,
+        forecast.message
+      );
+  }
+
+  /*
+    Get my forecast for project
+  */
+  function getMyForecast(bytes32 projectId) returns (
+      address _creator,
+      bytes32 _project,
+      ForecastRaiting _raiting,
+      uint _timestamp,
+      bytes32 _message
+    ) {
+      var forecast = myForecasts[msg.sender][projectId];
+
+      return (
+        forecast.creator,
+        forecast.project,
+        forecast.raiting,
+        forecast.timestamp,
+        forecast.message
+      );
+    }
 }

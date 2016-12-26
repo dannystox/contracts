@@ -27,11 +27,18 @@ const milestoneFields = {
   2: 'items'
 };
 
+const forecastFields = {
+  0: 'creator',
+  1: 'projectId',
+  2: 'raiting',
+  3: 'timestamp',
+  4: 'message'
+};
+
 let internalParser = (arr, fields) => {
   const result = {};
 
   for (let i in arr) {
-    console.log(i, arr[i]);
     result[fields[i]] = arr[i];
   }
 
@@ -50,8 +57,13 @@ let parseMilestone = (arr) => {
   return internalParser(arr, milestoneFields);
 }
 
+let parseForecast = (arr) => {
+  return internalParser(arr, forecastFields);
+}
+
 module.exports = {
   parseProject: parseProject,
   parseBaseProject: parseBaseProject,
-  parseMilestone: parseMilestone
+  parseMilestone: parseMilestone,
+  parseForecast: parseForecast
 }
