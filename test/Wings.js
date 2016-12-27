@@ -388,7 +388,7 @@ contract('Wings', (accounts) => {
 
       return wings.addForecast.sendTransaction(
         projectId,
-        2,
+        0,
         "0x" + crypto.randomBytes(32),
         {
           from: user

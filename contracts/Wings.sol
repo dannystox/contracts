@@ -22,7 +22,6 @@ contract Wings {
   */
   enum ForecastRaiting {
     Low,
-    Middle,
     Top
   }
 
