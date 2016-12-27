@@ -404,5 +404,22 @@ contract('Wings', (accounts) => {
       }).then(done).catch(done);
     });
 
+    it("Should allow to start crowdsale", (done) => {
+      const user = accounts[1];
+      return wings.startCrowdsale.sendTransaction(
+        projectId,
+        {
+          from: user
+        }
+      ).then((txId) => {
+        assert.notEqual(txId, null);
+      }).then(done).catch(done);
+    });
 
+    it("Should return crowdsale contract", (done) => {
+      return wings.getCrowdsale.call(projectId).then((crowdsale) => {
+        console.log(crowdsale[0], crowdsale[1]);
+        assert.notEqual(crowdsale, null);
+      }).then(done).catch(done);
+    });
 });

@@ -1,6 +1,7 @@
 pragma solidity ^0.4.2;
 
 import './helpers/strings.sol';
+import './WingsCrowdsale.sol';
 
 contract Wings {
   using strings for *;
@@ -71,13 +72,15 @@ contract Wings {
     bytes32 message; // message
   }
 
+
   /*
     Wings Project Structure
   */
   struct Project {
     bytes32 id; // id of project
-
+    //address crowdsale; // crowdsale contract of project
     string name; // name of project
+
     bytes32 shortBlurb; // hash of shortBlurb
     bytes32 logoHash; // hash of project logotype
 
@@ -88,7 +91,7 @@ contract Wings {
     uint goal; // goal that project expect to collect
 
     string videolink; // link to the video
-    bytes32 story; //hash of project story
+    bytes32 story;
 
     address creator; // creator of the projects
 
@@ -110,6 +113,17 @@ contract Wings {
 
   mapping(address => mapping(bytes32 => Forecast)) myForecasts; // my forecast to the project
 
+  /*
+    Crowdsales
+  */
+  struct Crowdsale {
+    address creator;
+    bytes32 projectId;
+    address crowdsaleContract;
+  }
+
+  mapping(bytes32 => Crowdsale) crowdsales;
+
   uint count; // amount of projects
   address creator; // creator of the contract
 
@@ -129,19 +143,27 @@ contract Wings {
     }
   }
 
+  modifier allowToStartCrowdsale(bytes32 projectId) {
+    var crowdsale = crowdsales[projectId];
+
+    if (crowdsale.creator == address(0)) {
+      _;
+    }
+  }
+
   function Wings() {
     creator = msg.sender;
   }
 
-  function getProjectId(uint n) returns (bytes32) {
+  function getProjectId(uint n) constant returns (bytes32) {
     return projectsIds[n];
   }
 
-  function getMyProjectsCount(address owner) returns (uint) {
+  function getMyProjectsCount(address owner) constant returns (uint) {
     return myProjectsCount[owner];
   }
 
-  function getMyProjectId(address owner, uint id) returns (bytes32) {
+  function getMyProjectId(address owner, uint id) constant returns (bytes32) {
     return myProjectsIds[owner][id];
   }
 
@@ -175,6 +197,8 @@ contract Wings {
         throw;
       }
 
+      //address _crowdsale = new WingsCrowdsale(_name, _name);
+
       var project = Project(
         _projectId,
         _name,
@@ -190,8 +214,8 @@ contract Wings {
         msg.sender, // creator
         block.timestamp, // timestamp
         cap, // cap
-        0, // milestones count
-        0  // forecasts count
+        0,
+        0
       );
 
       projects[_projectId] = project;
@@ -204,7 +228,7 @@ contract Wings {
 
 
   /* Get base project info */
-  function getBaseProject(bytes32 id) returns (
+  function getBaseProject(bytes32 id) constant returns (
       bytes32 projectId,
       string name,
       bytes32 logoHash,
@@ -230,7 +254,7 @@ contract Wings {
         );
     }
 
-  function getProject(bytes32 id) returns (
+  function getProject(bytes32 id) constant returns (
       bytes32 projectId,
       string name,
       RewardTypes rewardType,
@@ -286,7 +310,7 @@ contract Wings {
   /*
     Get count of projects
   */
-  function getCount() returns (uint) {
+  function getCount() constant returns (uint) {
     return count;
   }
 
@@ -322,7 +346,7 @@ contract Wings {
   }
 
   // get milestones count
-  function getMilestonesCount(bytes32 id) returns (uint) {
+  function getMilestonesCount(bytes32 id) constant returns (uint) {
     var project = projects[id];
 
     return project.milestonesCount;
@@ -331,7 +355,7 @@ contract Wings {
   /*
     Get milestone
   */
-  function getMilestone(bytes32 id, uint milestoneId) returns (MilestoneType _type, uint amount, string items) {
+  function getMilestone(bytes32 id, uint milestoneId) constant returns (MilestoneType _type, uint amount, string items) {
     var project = projects[id];
 
     if (project.creator == address(0)) {
@@ -347,7 +371,7 @@ contract Wings {
   /*
     Get minimal goal of the project
   */
-  function getMinimalGoal(bytes32 id) returns (uint minimal) {
+  function getMinimalGoal(bytes32 id) constant returns (uint minimal) {
     var project = projects[id];
 
     if (project.creator == address(0)) {
@@ -364,7 +388,7 @@ contract Wings {
   /*
     Get cap goal of the project
   */
-  function getCap(bytes32 id) returns (uint cap) {
+  function getCap(bytes32 id) constant returns (uint cap) {
     var project = projects[id];
 
     if (project.creator == address(0) || project.cap == false) {
@@ -386,11 +410,11 @@ contract Wings {
     var project = projects[projectId];
 
     if (project.creator == address(0)) {
-      //throw;
+      throw;
     }
 
     if (myForecasts[msg.sender][projectId].creator != address(0)) {
-      //throw;
+      throw;
     }
 
     var forecast = Forecast(
@@ -408,7 +432,7 @@ contract Wings {
   /*
     Get forecasts count
   */
-  function getForecastCount(bytes32 projectId) returns (uint) {
+  function getForecastCount(bytes32 projectId) constant returns (uint) {
     var project = projects[projectId];
     return project.forecastsCount;
   }
@@ -420,7 +444,7 @@ contract Wings {
     ForecastRaiting raiting; // raiting
     uint timestamp; // timestamp
   */
-  function getForecast(bytes32 projectId, uint id) returns (
+  function getForecast(bytes32 projectId, uint id) constant returns (
       address _creator,
       bytes32 _project,
       ForecastRaiting _raiting,
@@ -442,7 +466,7 @@ contract Wings {
   /*
     Get my forecast for project
   */
-  function getMyForecast(bytes32 projectId) returns (
+  function getMyForecast(bytes32 projectId) constant returns (
       address _creator,
       bytes32 _project,
       ForecastRaiting _raiting,
@@ -459,4 +483,26 @@ contract Wings {
         forecast.message
       );
     }
+
+  function startCrowdsale(bytes32 projectId) projectOwner(projectId) allowToStartCrowdsale(projectId) {
+    var project = projects[projectId];
+
+    address crowdsaleContract = new WingsCrowdsale(project.name, project.name);
+    var crowdsale = Crowdsale(
+        msg.sender,
+        projectId,
+        crowdsaleContract
+      );
+
+    crowdsales[projectId] = crowdsale;
+  }
+
+  function getCrowdsale(bytes32 projectId) constant returns (address, address) {
+    var crowdsale = crowdsales[projectId];
+    return (
+        crowdsale.creator,
+        crowdsale.crowdsaleContract
+      );
+  }
+
 }
