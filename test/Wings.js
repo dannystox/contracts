@@ -20,6 +20,7 @@ contract('Wings', (accounts) => {
 
   before("Should Create Project", (done) => {
     creator = accounts[0];
+    console.log("Creator: ", creator);
 
     Wings.new({
       from: creator
@@ -338,7 +339,7 @@ contract('Wings', (accounts) => {
 
       return wings.addForecast.sendTransaction(
         forecast.projectId,
-        forecast.raiting,
+        1,
         forecast.message,
         {
           from: creator
@@ -361,7 +362,7 @@ contract('Wings', (accounts) => {
         assert.notEqual(forecastInst, null);
         assert.equal(forecastInst.projectId, forecast.projectId);
         assert.equal(forecastInst.creator, creator);
-        assert.equal(forecastInst.raiting, forecast.raiting);
+        //assert.equal(forecastInst.raiting, forecast.raiting);
         assert.equal(forecastInst.message, forecast.message);
       }).then(done).catch(done);
     });

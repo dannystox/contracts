@@ -70,6 +70,7 @@ contract Wings {
     ForecastRaiting raiting; // raiting
     uint timestamp; // timestamp
     bytes32 message; // message
+    uint sum; // sum that going to collect
   }
 
 
@@ -406,7 +407,7 @@ contract Wings {
   /*
     Forecasting
   */
-  function addForecast(bytes32 projectId, ForecastRaiting raiting, bytes32 message) {
+  function addForecast(bytes32 projectId, uint sum, bytes32 message) {
     var project = projects[projectId];
 
     if (project.creator == address(0)) {
@@ -417,12 +418,25 @@ contract Wings {
       throw;
     }
 
+    if (sum > project.goal) {
+      throw;
+    }
+
+    uint goalPart = project.goal / 2;
+
+    ForecastRaiting raiting = ForecastRaiting.Low;
+
+    if (sum > goalPart) {
+      raiting = ForecastRaiting.Top;
+    }
+
     var forecast = Forecast(
       msg.sender,
       projectId,
       raiting,
       block.timestamp,
-      message
+      message,
+      sum
     );
 
     project.forecasts[project.forecastsCount++] = forecast;
@@ -449,7 +463,8 @@ contract Wings {
       bytes32 _project,
       ForecastRaiting _raiting,
       uint _timestamp,
-      bytes32 _message
+      bytes32 _message,
+      uint sum
     ) {
       var project = projects[projectId];
       var forecast = project.forecasts[id];
@@ -459,7 +474,8 @@ contract Wings {
         forecast.project,
         forecast.raiting,
         forecast.timestamp,
-        forecast.message
+        forecast.message,
+        forecast.sum
       );
   }
 
@@ -471,7 +487,8 @@ contract Wings {
       bytes32 _project,
       ForecastRaiting _raiting,
       uint _timestamp,
-      bytes32 _message
+      bytes32 _message,
+      uint _sum
     ) {
       var forecast = myForecasts[msg.sender][projectId];
 
@@ -480,7 +497,8 @@ contract Wings {
         forecast.project,
         forecast.raiting,
         forecast.timestamp,
-        forecast.message
+        forecast.message,
+        forecast.sum
       );
     }
 
