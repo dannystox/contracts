@@ -1,6 +1,6 @@
-# Wings Contracts
+# Wings Smart Contracts
 
-## Warning: This is an alpha version of the WingsDAO platform contracts, intended to run on devnet and testnet blockchains. Do not use on the mainnet blockchain!
+## Warning: This is an alpha version of the Wings DAO platform contracts, intended to run on devnet and testnet blockchains. Do not use on the mainnet blockchain. Do not send mainnet cryptocurrencies to addresses generated on the devnet. 
 
 ## Installation
 
