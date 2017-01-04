@@ -27,6 +27,10 @@ Run in the project directory:
 truffle test
 ```
 
+## Copyright
+
+Copyright 2017 Wings Stiftung. All right reserved.
+
 ## License
 
-&copy; Wings
+Licensing to be determined after legal review.
