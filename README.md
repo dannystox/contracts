@@ -1,6 +1,6 @@
 # Wings Contracts
 
-## WARNING: THIS IS AN ALPHA VERSION OF THE WINGSDAO PLATFORM CONTRACTS, INTENDED TO RUN ON DEVNET AND TESTNET. DO NOT USE ON LIVE NETWORKS!
+## Warning: This is an alpha version of the WingsDAO platform contracts, intended to run on devnet and testnet blockchains. Do not use on the mainnet blockchain!
 
 ## Installation
 
