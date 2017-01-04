@@ -27,9 +27,6 @@ Run in the project directory:
 truffle test
 ```
 
-## License
-
-Licensing to be determined after legal review.
 
 ## Copyright
 
