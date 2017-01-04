@@ -30,4 +30,4 @@ truffle test
 
 ## Copyright
 
-Copyright 2017 Wings Stiftung. All right reserved.
+Copyright 2017 © Wings Stiftung. All right reserved.
