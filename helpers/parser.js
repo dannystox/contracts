@@ -7,7 +7,7 @@ const projectFields = {
   5: 'story',
   6: 'creator',
   7: 'timestamp'
-};
+}
 
 const projectBaseFields = {
   0: 'projectId',
@@ -19,13 +19,13 @@ const projectBaseFields = {
   6: 'duration',
   7: 'goal',
   8: 'timestamp'
-};
+}
 
 const milestoneFields = {
   0: 'type',
   1: 'amount',
   2: 'items'
-};
+}
 
 const forecastFields = {
   0: 'creator',
@@ -33,37 +33,26 @@ const forecastFields = {
   2: 'raiting',
   3: 'timestamp',
   4: 'message'
-};
+}
 
-let internalParser = (arr, fields) => {
-  const result = {};
+const internalParser = (arr, fields) => {
+  const result = {}
 
   for (let i in arr) {
-    result[fields[i]] = arr[i];
+    result[fields[i]] = arr[i]
   }
 
-  return result;
+  return result
 }
 
-let parseProject = (arr) => {
-  return internalParser(arr, projectFields);
-}
-
-let parseBaseProject = (arr) => {
-  return internalParser(arr, projectBaseFields);
-}
-
-let parseMilestone = (arr) => {
-  return internalParser(arr, milestoneFields);
-}
-
-let parseForecast = (arr) => {
-  return internalParser(arr, forecastFields);
-}
+const parseProject = (arr) => internalParser(arr, projectFields)
+const parseBaseProject = (arr) => internalParser(arr, projectBaseFields)
+const parseMilestone = (arr) => internalParser(arr, milestoneFields)
+const parseForecast = (arr) => internalParser(arr, forecastFields)
 
 module.exports = {
-  parseProject: parseProject,
-  parseBaseProject: parseBaseProject,
-  parseMilestone: parseMilestone,
-  parseForecast: parseForecast
+  parseProject,
+  parseBaseProject,
+  parseMilestone,
+  parseForecast
 }
