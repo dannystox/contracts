@@ -12,10 +12,6 @@ contract Wings {
   event ProjectCreation(address indexed creator, bytes32 indexed id, string name);
   event ProjectReady(bytes32 indexed id, string name);
   event ProjectPublishing(bytes32 indexed creator, bytes32 indexed id);
-
-  /*
-    Milestone Events
-   */
   event MilestoneAdded(bytes indexed id);
 
   /*
@@ -55,6 +51,16 @@ contract Wings {
   }
 
   /*
+    Projects Periods
+  */
+  enum ProjectPeriod {
+    Review,
+    Forecasting,
+    Funding,
+    AfterFunding
+  }
+
+  /*
     Milestone Structure
   */
   struct Milestone {
@@ -64,6 +70,9 @@ contract Wings {
     string[] items; // milestone items
   }
 
+  /*
+    Forecast Structure
+  */
   struct Forecast {
     address creator;  // creator
     bytes32 project; // project
@@ -106,6 +115,12 @@ contract Wings {
     mapping(uint => Forecast) forecasts; // Forecasts
   }
 
+  struct Crowdsale {
+    address creator;
+    bytes32 projectId;
+    address crowdsaleContract;
+  }
+
   mapping(bytes32 => Project) projects; // project by name hash to project object
   mapping(uint => bytes32) projectsIds; // project ids
 
@@ -114,20 +129,20 @@ contract Wings {
 
   mapping(address => mapping(bytes32 => Forecast)) myForecasts; // my forecast to the project
 
-  /*
-    Crowdsales
-  */
-  struct Crowdsale {
-    address creator;
-    bytes32 projectId;
-    address crowdsaleContract;
-  }
-
   mapping(bytes32 => Crowdsale) crowdsales;
 
   uint count; // amount of projects
   address creator; // creator of the contract
 
+  /*
+    Constants
+  */
+  uint constant reviewPeriodHours = 48;
+  uint constant forecastPeriodHours = 96;
+
+  /*
+    Modifiers
+  */
   modifier projectOwner(bytes32 projectId) {
     var project = projects[projectId];
 
@@ -152,6 +167,17 @@ contract Wings {
     }
   }
 
+  modifier checkPeriod(bytes32 projectId, ProjectPeriod _period) {
+    var projectPeriod = getProjectPeriod(projectId);
+
+    if (_period == projectPeriod) {
+      _;
+    }
+  }
+
+  /*
+    Code
+  */
   function Wings() {
     creator = msg.sender;
   }
@@ -384,6 +410,39 @@ contract Wings {
     }
 
     return project.milestones[0].amount;
+  }
+
+  /*
+    Get project period
+  */
+  function getProjectPeriod(bytes32 projectId) returns (ProjectPeriod _period) {
+    var project = projects[projectId];
+
+    if (project.creator == address(0)) {
+      throw;
+    }
+
+    var projectTimestamp = project.timestamp;
+    var time = block.timestamp;
+
+    if (time < (projectTimestamp + reviewPeriodHours * 1 hours)) {
+      return ProjectPeriod.Review;
+    }
+
+    if (time < (projectTimestamp + forecastPeriodHours * 1 hours)) {
+      return ProjectPeriod.Forecasting;
+    }
+
+    /*
+      ToDo:
+      Check cap and funding goals here
+    */
+    var crowdsale = crowdsales[projectId];
+    if (time < (projectTimestamp + project.duration * 1 days)) {
+      return ProjectPeriod.Funding;
+    }
+
+    return ProjectPeriod.AfterFunding;
   }
 
   /*
