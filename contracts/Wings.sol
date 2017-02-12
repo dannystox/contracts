@@ -137,8 +137,8 @@ contract Wings {
   /*
     Constants
   */
-  uint constant reviewPeriodHours = 48;
-  uint constant forecastPeriodHours = 96;
+  uint constant reviewPeriod = 48 * 1 hours;
+  uint constant forecastPeriod = 96 * 1 hours;
 
   /*
     Modifiers
@@ -154,7 +154,7 @@ contract Wings {
   modifier allowToAddMilestone(bytes32 projectId) {
     var project = projects[projectId];
 
-    if (block.timestamp < project.timestamp + 24 hours) {
+    if (block.timestamp < project.timestamp + reviewPeriod) {
       _;
     }
   }
@@ -425,11 +425,11 @@ contract Wings {
     var projectTimestamp = project.timestamp;
     var time = block.timestamp;
 
-    if (time < (projectTimestamp + reviewPeriodHours * 1 hours)) {
+    if (time < (projectTimestamp + reviewPeriod)) {
       return ProjectPeriod.Review;
     }
 
-    if (time < (projectTimestamp + forecastPeriodHours * 1 hours)) {
+    if (time < (projectTimestamp + forecastPeriod)) {
       return ProjectPeriod.Forecasting;
     }
 
@@ -466,7 +466,7 @@ contract Wings {
   /*
     Forecasting
   */
-  function addForecast(bytes32 projectId, uint sum, bytes32 message) {
+  function addForecast(bytes32 projectId, uint sum, bytes32 message) checkPeriod(projectId, ProjectPeriod.Forecasting) {
     var project = projects[projectId];
 
     if (project.creator == address(0)) {
@@ -561,7 +561,7 @@ contract Wings {
       );
     }
 
-  function startCrowdsale(bytes32 projectId) projectOwner(projectId) allowToStartCrowdsale(projectId) {
+  function startCrowdsale(bytes32 projectId) projectOwner(projectId) allowToStartCrowdsale(projectId) checkPeriod(projectId, ProjectPeriod.Review) {
     var project = projects[projectId];
 
     address crowdsaleContract = new WingsCrowdsale(project.name, project.name);
