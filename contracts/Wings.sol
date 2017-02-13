@@ -137,8 +137,8 @@ contract Wings {
   /*
     Constants
   */
-  uint constant reviewPeriod = 48 * 1 hours;
-  uint constant forecastPeriod = 96 * 1 hours;
+  uint constant reviewPeriod = 48 hours;
+  uint constant forecastPeriod = 96 hours;
 
   /*
     Modifiers
@@ -429,7 +429,7 @@ contract Wings {
       return ProjectPeriod.Review;
     }
 
-    if (time < (projectTimestamp + forecastPeriod)) {
+    if (time < (projectTimestamp + (reviewPeriod + forecastPeriod))) {
       return ProjectPeriod.Forecasting;
     }
 
