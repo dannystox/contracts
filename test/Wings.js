@@ -1,16 +1,18 @@
 /* global contract, Wings, before, assert, it */
-
+const web3 = global.web3;
 const crypto = require('crypto')
 const Chance = require('chance')
 const Web3 = require('web3')
 const Promise = require('bluebird')
 const parser = require('../helpers/parser')
+const time = require('../helpers/time.js')
+const config = require('../truffle.js')
+const TestRPC = require("ethereumjs-testrpc");
 // const delay = require('../helpers/delay')
 const uuid = require('uuid')
 const BigNumber = require('bignumber.js')
 
 let chance = new Chance()
-let web3 = new Web3()
 
 contract('Wings', (accounts) => {
   let wings, creator
@@ -311,23 +313,7 @@ contract('Wings', (accounts) => {
     })
   })
 
-  it.skip('Get project minimal goal', (done) => {
-    return wings.getMinimalGoal.call(projectId).then((goal) => {
-      assert.equal(goal.toString(), addedMilestones[0].amount.toString())
-    }).then(done).catch(done)
-  })
-
-  it.skip('Get project cap', (done) => {
-    return wings.getCap.call(projectId).then((cap) => {
-      return Promise.reduce(addedMilestones, (r, milestone) => {
-        return new BigNumber(milestone.amount).add(r)
-      }, new BigNumber(0)).then((realCap) => {
-        assert.equal(realCap.toString(), cap.toString())
-      })
-    }).then(done).catch(done)
-  })
-
-  it('Should add forecast to the project', (done) => {
+  it('Shouldn\'t allow to add forecast to project', (done) => {
     forecast = {
       projectId: projectId,
       raiting: 0,
@@ -341,9 +327,36 @@ contract('Wings', (accounts) => {
       {
         from: creator
       }
-      ).then((txId) => {
-        assert.notEqual(txId, null)
-      }).then(done).catch(done)
+    ).then((txId) => {
+      assert.equal(txId, null)
+    }).catch((err) => {
+      done()
+    })
+  })
+
+  it('Should add forecast to the project', (done) => {
+    return time.moveTime(web3, 172800).then(() => {
+      forecast = {
+        projectId: projectId,
+        raiting: 0,
+        message: '0x' + crypto.randomBytes(32).toString('hex')
+      }
+
+      return wings.addForecast.sendTransaction(
+          forecast.projectId,
+          1,
+          forecast.message,
+        {
+          from: creator
+        }
+        )
+    }).then((txId) => {
+      assert.notEqual(txId, null)
+    }).then(done).catch(done)
+  })
+
+  it.skip('Shouldn\'t allow to add milestone to project', (done) => {
+
   })
 
   it('Should return forecast equal to 1', (done) => {
