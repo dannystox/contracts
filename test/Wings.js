@@ -6,9 +6,6 @@ const Web3 = require('web3')
 const Promise = require('bluebird')
 const parser = require('../helpers/parser')
 const time = require('../helpers/time.js')
-const config = require('../truffle.js')
-const TestRPC = require("ethereumjs-testrpc");
-// const delay = require('../helpers/delay')
 const uuid = require('uuid')
 const BigNumber = require('bignumber.js')
 
