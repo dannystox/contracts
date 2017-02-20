@@ -8,7 +8,6 @@ const moveTime = (web3, value) => {
       params: [value],
       id: new Date().getTime()
     }, (err, result) => {
-      console.log("increase time result", result)
       err? reject(err) : resolve()
     })
   })
