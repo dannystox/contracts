@@ -1,6 +1,7 @@
 pragma solidity ^0.4.2;
 
 import './helpers/strings.sol';
+import './CommentAbstraction.sol';
 import './WingsCrowdsale.sol';
 
 contract Wings {
@@ -141,6 +142,11 @@ contract Wings {
   uint constant forecastPeriod = 96 hours;
 
   /*
+    Contracts
+  */
+  address public commentContractAddress;
+
+  /*
     Modifiers
   */
   modifier projectOwner(bytes32 projectId) {
@@ -178,8 +184,9 @@ contract Wings {
   /*
     Code
   */
-  function Wings() {
+  function Wings(address _commentContractAddress) {
     creator = msg.sender;
+    commentContractAddress = _commentContractAddress;
   }
 
   function getProjectId(uint n) constant returns (bytes32) {
@@ -582,4 +589,22 @@ contract Wings {
       );
   }
 
+  /*
+    Comments
+  */
+  function addComment(bytes32 projectId, bytes32 data) {
+    CommentAbstraction comments = CommentAbstraction(commentContractAddress);
+    comments.addComment(projectId, data);
+  }
+
+  function getCommentsCount(bytes32 projectId) constant returns (uint) {
+    CommentAbstraction comments = CommentAbstraction(commentContractAddress);
+    return comments.getCommentsCount(projectId);
+  }
+
+  function getComment(bytes32 projectId, uint index) constant returns (address, bytes32, bytes32, uint) {
+    CommentAbstraction comments = CommentAbstraction(commentContractAddress);
+    return comments.getComment(projectId, index);
+  }
+  
 }

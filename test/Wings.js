@@ -18,13 +18,22 @@ contract('Wings', (accounts) => {
   let forecast
 
   let addedMilestones
+  let addedComments
 
   before('Should Create Project', (done) => {
     creator = accounts[0]
+
+    addedMilestones = []
+    addedComments = []
+
     console.log('Creator: ', creator)
 
-    Wings.new({
+    BasicComment.new({
       from: creator
+    }).then((basiccomment) => {
+      return Wings.new(basiccomment.address, {
+        from: creator
+      })
     }).then((_wings) => {
       wings = _wings
     }).then(() => {
@@ -331,6 +340,40 @@ contract('Wings', (accounts) => {
     })
   })
 
+  it('Should add comment to project', (done) => {
+    let comment = {
+      projectId: projectId,
+      data: '0x' + crypto.randomBytes(32).toString('hex')
+    }
+
+    addedComments.push(comment)
+
+    return wings.addComment.sendTransaction(comment.projectId, comment.data, {
+      from: creator
+    }).then((txId) => {
+      assert.notEqual(txId, null)
+    }).then(done).catch(done)
+  })
+
+  it('Should has one comment', (done) => {
+    return wings.getCommentsCount
+      .call(projectId)
+      .then((count) => {
+        assert.equal(count.toNumber(), 1)
+      }).then(done).catch(done)
+  })
+
+  it('Should return correct comment', (done) => {
+    return wings.getComment.call(projectId, 0).then((commentData) => {
+      let comment = parser.parseComment(commentData)
+      let realComment = addedComments[0]
+
+      assert.equal(comment.address, creator)
+      assert.equal(comment.data, realComment.data)
+      assert.equal(comment.projectId, projectId)
+    }).then(done).catch(done)
+  })
+
   it('Should add forecast to the project', (done) => {
     return time.moveTime(web3, 172800).then(() => {
       forecast = {
@@ -429,4 +472,5 @@ contract('Wings', (accounts) => {
       assert.notEqual(crowdsale, null)
     }).then(done).catch(done)
   })
+
 })
