@@ -1,17 +1,12 @@
 const projectFields = {
   0: 'projectId',
   1: 'name',
-  2: 'shortBlurb',
-  3: 'logoHash',
-  4: 'category',
-  5: 'rewardType',
-  6: 'rewardPercent',
-  7: 'duration',
-  8: 'goal',
-  9: 'videolink',
-  10: 'story',
-  11: 'creator',
-  12: 'underReview'
+  2: 'rewardType',
+  3: 'rewardPercent',
+  4: 'videolink',
+  5: 'story',
+  6: 'creator',
+  7: 'timestamp'
 };
 
 const projectBaseFields = {
@@ -20,17 +15,24 @@ const projectBaseFields = {
   2: 'logoHash',
   3: 'category',
   4: 'shortBlurb',
-  5: 'underReview',
-  6: 'cap',
-  7: 'duration',
-  8: 'goal',
-  9: 'creator'
+  5: 'cap',
+  6: 'duration',
+  7: 'goal',
+  8: 'timestamp'
 };
 
 const milestoneFields = {
   0: 'type',
   1: 'amount',
   2: 'items'
+};
+
+const forecastFields = {
+  0: 'creator',
+  1: 'projectId',
+  2: 'raiting',
+  3: 'timestamp',
+  4: 'message'
 };
 
 let internalParser = (arr, fields) => {
@@ -55,8 +57,13 @@ let parseMilestone = (arr) => {
   return internalParser(arr, milestoneFields);
 }
 
+let parseForecast = (arr) => {
+  return internalParser(arr, forecastFields);
+}
+
 module.exports = {
   parseProject: parseProject,
   parseBaseProject: parseBaseProject,
-  parseMilestone: parseMilestone
+  parseMilestone: parseMilestone,
+  parseForecast: parseForecast
 }
