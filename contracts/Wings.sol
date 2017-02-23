@@ -1,7 +1,7 @@
 pragma solidity ^0.4.2;
 
 import './helpers/strings.sol';
-import './CommentAbstraction.sol';
+import './comments/CommentAbstraction.sol';
 import './WingsCrowdsale.sol';
 
 contract Wings {
