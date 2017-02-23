@@ -1,7 +1,7 @@
 pragma solidity ^0.4.2;
 
 import './helpers/strings.sol';
-import './CommentAbstraction.sol';
+import './comments/CommentAbstraction.sol';
 import './WingsCrowdsale.sol';
 
 contract Wings {
@@ -149,6 +149,12 @@ contract Wings {
   /*
     Modifiers
   */
+  modifier onlyCreator() {
+    if (msg.sender == creator) {
+      _;
+    }
+  }
+
   modifier projectOwner(bytes32 projectId) {
     var project = projects[projectId];
 
@@ -606,5 +612,9 @@ contract Wings {
     CommentAbstraction comments = CommentAbstraction(commentContractAddress);
     return comments.getComment(projectId, index);
   }
-  
+
+  function updateCommentContract(address newCommentContractAddress) onlyCreator {
+    commentContractAddress = newCommentContractAddress;
+  }
+
 }

@@ -12,7 +12,7 @@ const BigNumber = require('bignumber.js')
 let chance = new Chance()
 
 contract('Wings', (accounts) => {
-  let wings, creator
+  let wings, creator, storage
 
   let projectId, project, milestone
   let forecast
@@ -28,8 +28,18 @@ contract('Wings', (accounts) => {
 
     console.log('Creator: ', creator)
 
-    BasicComment.new({
+    Storage.new({
       from: creator
+    }).then((_storage) => {
+      storage = _storage
+
+      return BasicComment.new(storage.address, {
+        from: creator
+      }).then((basiccomment) => {
+        return storage.addMember.sendTransaction(basiccomment.address, {
+          from: creator
+        }).then(() => basiccomment);
+      })
     }).then((basiccomment) => {
       return Wings.new(basiccomment.address, {
         from: creator
@@ -374,6 +384,26 @@ contract('Wings', (accounts) => {
     }).then(done).catch(done)
   })
 
+  it('Should allow to update comments contract', (done) => {
+    return BasicComment.new(storage.address, {
+      from: creator
+    }).then((basiccomment) => {
+      return wings.updateCommentContract.sendTransaction(basiccomment.address, {
+        from: creator
+      })
+    }).then((txId) => {
+      assert.notEqual(txId, null)
+    }).then(done).catch(done)
+  })
+
+  it('Should still contains 1 comment even after update', (done) => {
+    return wings.getCommentsCount
+      .call(projectId)
+      .then((count) => {
+        assert.equal(count.toNumber(), 1)
+      }).then(done).catch(done)
+  })
+
   it('Should add forecast to the project', (done) => {
     return time.moveTime(web3, 172800).then(() => {
       forecast = {
@@ -393,10 +423,6 @@ contract('Wings', (accounts) => {
     }).then((txId) => {
       assert.notEqual(txId, null)
     }).then(done).catch(done)
-  })
-
-  it.skip('Shouldn\'t allow to add milestone to project', (done) => {
-
   })
 
   it('Should return forecast equal to 1', (done) => {

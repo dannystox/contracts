@@ -5,39 +5,19 @@
 */
 pragma solidity ^0.4.2;
 
-contract CommentAbstraction {
+import "../zeppelin/Ownable.sol";
+
+contract CommentAbstraction is Ownable {
     /*
       Storage
     */
-    address storage;
-
-    /*
-      Creator
-    */
-    address creator;
-
-    /*
-      Modifiers
-    */
-    modifier onlyCreator {
-      if (msg.sender == creator) {
-        _;
-      }
-    }
-
-    /*
-      Comments Storage
-    */
-    function CommentAbstraction(address _storage) {
-      storage = _storage;
-      creator = msg.sender;
-    }
+    address public storageAddress;
 
     /*
       Change storage
     */
-    function changeStorage(address newStorage) onlyCreator  {
-      storage = newStorage;
+    function changeStorage(address newStorage) onlyOwner()  {
+      storageAddress = newStorage;
     }
 
     /*
