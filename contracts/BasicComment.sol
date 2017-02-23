@@ -1,14 +1,12 @@
 pragma solidity ^0.4.2;
 
 import "./CommentAbstraction.sol";
+import "./CommentsStorage.sol";
 
 contract BasicComment is CommentAbstraction {
   function addComment(bytes32 projectId, bytes32 data) {
     var count = commentsCount[projectId];
     var comment = Comment(tx.origin, data, projectId, block.timestamp);
-
-    comments[projectId][count] = comment;
-    commentsCount[projectId] = count+1;
   }
 
   function getCommentsCount(bytes32 projectId) constant returns (uint) {

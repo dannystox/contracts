@@ -149,6 +149,12 @@ contract Wings {
   /*
     Modifiers
   */
+  modifier onlyCreator() {
+    if (msg.sender == creator) {
+      _;
+    }
+  }
+
   modifier projectOwner(bytes32 projectId) {
     var project = projects[projectId];
 
@@ -606,5 +612,9 @@ contract Wings {
     CommentAbstraction comments = CommentAbstraction(commentContractAddress);
     return comments.getComment(projectId, index);
   }
-  
+
+  function updateCommentContract(address newCommentContractAddress) onlyCreator {
+    commentContractAddress = newCommentContractAddress;
+  }
+
 }
