@@ -1,5 +1,5 @@
 {
-  "name": "wingscontracts",
+  "name": "wingsdao-contracts",
   "version": "1.0.0",
   "description": "Wings Contracts",
   "main": "truffle.js",
