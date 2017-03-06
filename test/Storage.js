@@ -1,6 +1,7 @@
 const assertJump = require('../helpers/assertJump')
 const crypto = require('crypto')
 const BigNumber = require('bignumber.js')
+const Storage = artifacts.require("../contracts/storage/Storage.sol")
 
 contract('Storage', (accounts) => {
   const creator = accounts[0]
@@ -9,15 +10,16 @@ contract('Storage', (accounts) => {
   let storage
 
 
-  before('Create storage and set whitelist', (done) => {
+  before('Create storage and set whitelist', () => {
     return Storage.new({
       from: creator
     }).then((_storage) => {
+      console.log('created storage')
       storage = _storage
-    }).then(done).catch(done)
+    })
   });
 
-  it('Should allow to write data to one of whitelist members and read that data', (done) => {
+  it('Should allow to write data to one of whitelist members and read that data', () => {
     const hash = "0x" + crypto.randomBytes(32).toString("hex")
     const value = 1
 
@@ -28,10 +30,10 @@ contract('Storage', (accounts) => {
       return storage.getUIntValue.call(hash)
     }).then((_value) => {
       assert.equal(value.toString(), _value.toString(10))
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should doesn\'t allow to write data for not whitelisted account', (done) => {
+  it('Should doesn\'t allow to write data for not whitelisted account', () => {
     const hash = "0x" + crypto.randomBytes(32).toString("hex")
     const value = 1
 
@@ -39,32 +41,30 @@ contract('Storage', (accounts) => {
       from: user1
     }).then((txId) => {
       assert.equal(txId, null)
-    }).catch((err) => {
+    }).catch(err => {
       assert.notEqual(err, null)
-      done()
     })
   })
 
-  it('Shouldn\'t allow to add new member from not whitelisted account', (done) => {
+  it('Shouldn\'t allow to add new member from not whitelisted account', () => {
     return storage.addMember.sendTransaction(user1, {
       from: user1
     }).then((txId) => {
       assert.equal(txId, null)
     }).catch((err) => {
       assert.notEqual(err, null)
-      done()
     })
   })
 
-  it('Should allow to add another member to whitelist', (done) => {
+  it('Should allow to add another member to whitelist', () => {
     return storage.addMember.sendTransaction(user1, {
       from: creator
     }).then((txId) => {
       assert.notEqual(txId, null)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should allow to write data from new member', (done) => {
+  it('Should allow to write data from new member', () => {
     const hash = "0x" + crypto.randomBytes(32).toString("hex")
     const value = 1
 
@@ -72,10 +72,10 @@ contract('Storage', (accounts) => {
       from: user1
     }).then((txId) => {
       assert.notEqual(txId, null)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should write all kind of data successfully', (done) => {
+  it('Should write all kind of data successfully', () => {
     const data = [
       {
         set: 'setIntValue',
@@ -138,6 +138,6 @@ contract('Storage', (accounts) => {
           assert.equal(results[i], hashes[i].value)
         }
       }
-    }).then(done).catch(done)
+    })
   })
 })

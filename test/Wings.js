@@ -9,6 +9,11 @@ const time = require('../helpers/time.js')
 const uuid = require('uuid')
 const BigNumber = require('bignumber.js')
 
+const Storage = artifacts.require("../contracts/storage/Storage.sol")
+const BasicComment = artifacts.require("../contracts/comments/BasicComment.sol")
+const Wings = artifacts.require("../contracts/Wings.sol")
+const WingsCrowdsale = artifacts.require("../contracts/WingsCrowdsale.sol")
+
 let chance = new Chance()
 
 contract('Wings', (accounts) => {
@@ -20,7 +25,7 @@ contract('Wings', (accounts) => {
   let addedMilestones
   let addedComments
 
-  before('Should Create Project', (done) => {
+  before('Should Create Project', () => {
     creator = accounts[0]
 
     addedMilestones = []
@@ -28,7 +33,7 @@ contract('Wings', (accounts) => {
 
     console.log('Creator: ', creator)
 
-    Storage.new({
+    return Storage.new({
       from: creator
     }).then((_storage) => {
       storage = _storage
@@ -88,11 +93,11 @@ contract('Wings', (accounts) => {
         assert.equal(bcProject.name, project.name)
         assert.equal(bcProject.duration.toString(), project.duration.toString())
       })
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should return base project info', (done) => {
-    wings.getBaseProject.call(projectId).then((rawProject) => {
+  it('Should return base project info', () => {
+    return wings.getBaseProject.call(projectId).then((rawProject) => {
       assert.notEqual(rawProject, null)
 
       const project = parser.parseBaseProject(rawProject)
@@ -102,66 +107,62 @@ contract('Wings', (accounts) => {
       assert.notEqual(project.logoHash, null)
       assert.notEqual(project.category, null)
       assert.notEqual(project.shortBlurb, null)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should return 1 my project', (done) => {
-    wings.getMyProjectsCount.call(creator).then((count) => {
+  it('Should return 1 my project', () => {
+    return wings.getMyProjectsCount.call(creator).then((count) => {
       assert.equal(count, 1)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should return one my project', (done) => {
-    wings.getMyProjectId.call(creator, 0).then((_projectId) => {
+  it('Should return one my project', () => {
+    return wings.getMyProjectId.call(creator, 0).then((_projectId) => {
       assert.equal(_projectId, projectId)
-    }).then(done).catch(done)
+    })
   })
 
-  it("Should doesn't allow to change creator to another account from not owner account", (done) => {
+  it("Should doesn't allow to change creator to another account from not owner account", () => {
     const user = accounts[1]
 
-    wings.changeCreator.sendTransaction(projectId, user, {
+    return wings.changeCreator.sendTransaction(projectId, user, {
       from: user
     }).then(() => {
       assert.equal(1, null)
-      done()
     }).catch((err) => {
       assert.notEqual(err, null)
-      done()
     })
   })
 
-  it('Should allow to change creator to another account', (done) => {
+  it('Should allow to change creator to another account', () => {
     const user = accounts[1]
 
-    wings.changeCreator.sendTransaction(projectId, user, {
+    return wings.changeCreator.sendTransaction(projectId, user, {
       from: creator
     }).then((txId) => {
       assert.notEqual(txId, null)
-    }).then(done).catch(done)
-  })
-
-  it('Should confirm that owner changed to another account', (done) => {
-    const user = accounts[1]
-
-    wings.changeCreator.sendTransaction(projectId, creator, {
-      from: creator
-    }).then(() => {
-      assert.notEqual(1, null)
-      done()
-    }).catch((err) => {
-      assert.notEqual(err, null)
-      done()
     })
   })
 
-  it('Should have 1 project', (done) => {
-    wings.getCount.call().then((count) => {
-      assert.equal(count.toNumber(), 1)
-    }).then(done).catch(done)
+  it('Should confirm that owner changed to another account', () => {
+    const user = accounts[1]
+
+    return wings.changeCreator.sendTransaction(projectId, creator, {
+      from: creator
+    }).then(() => {
+      assert.notEqual(1, null)
+    }).catch((err) => {
+      assert.notEqual(err, null)
+    })
   })
 
-  it('Should allow to add milestone', (done) => {
+  it('Should have 1 project', () => {
+    return wings.getCount.call().then((count) => {
+      assert.equal(count.toNumber(), 1)
+    })
+  })
+
+  it('Should allow to add milestone', () => {
     const user = accounts[1]
 
     let amount = new BigNumber(project.goal).div(2).floor()
@@ -172,7 +173,7 @@ contract('Wings', (accounts) => {
       items: 'abc\nabc\nabc\n'
     }
 
-    wings.addMilestone.sendTransaction(
+    return wings.addMilestone.sendTransaction(
       milestone.projectId,
       milestone.type,
       milestone.amount,
@@ -182,19 +183,19 @@ contract('Wings', (accounts) => {
       }
     ).then((txId) => {
       assert.notEqual(txId, null)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should contains one milestone', (done) => {
-    wings.getMilestonesCount.call(projectId).then((result) => {
+  it('Should contains one milestone', () => {
+    return wings.getMilestonesCount.call(projectId).then((result) => {
       assert.equal(result.toNumber(), 1)
-    }).then(done).catch(done)
+    })
   })
 
-  it("Shouldn't allow to add more sum milestones than goal", (done) => {
+  it("Shouldn't allow to add more sum milestones than goal", () => {
     const user = accounts[1]
 
-    wings.addMilestone.sendTransaction(
+    return wings.addMilestone.sendTransaction(
       projectId,
       chance.integer({min: 0, max: 1}),
       project.goal,
@@ -204,14 +205,12 @@ contract('Wings', (accounts) => {
       }
     ).then((txId) => {
       assert.equal(1, null)
-      done()
     }).catch((err) => {
       assert.notEqual(err, null)
-      done()
     })
   })
 
-  it("Shouldn't allow to add more than 10 items to milestone", (done) => {
+  it("Shouldn't allow to add more than 10 items to milestone", () => {
     const user = accounts[1]
 
     let s = ''
@@ -225,7 +224,7 @@ contract('Wings', (accounts) => {
 
     let amount = new BigNumber(project.goal).div(3).floor()
 
-    wings.addMilestone.sendTransaction(
+    return wings.addMilestone.sendTransaction(
       projectId,
       chance.integer({min: 0, max: 1}),
       project.goal,
@@ -235,23 +234,21 @@ contract('Wings', (accounts) => {
       }
     ).then((txId) => {
       assert.equal(1, null)
-      done()
     }).catch((err) => {
       assert.notEqual(err, null)
-      done()
     })
   })
 
-  it('Should allow to get milestone', (done) => {
-    wings.getMilestone.call(projectId, 0).then((rawMilestone) => {
+  it('Should allow to get milestone', () => {
+    return wings.getMilestone.call(projectId, 0).then((rawMilestone) => {
       let milestoneObj = parser.parseMilestone(rawMilestone)
 
       assert.equal(milestoneObj.amount.toString(), milestone.amount)
       assert.equal(milestoneObj.items, milestone.items)
-    }).then(done).catch(done)
+    })
   })
 
-  it("Shouldn't allow to add more than 10 milestones to project", (done) => {
+  it("Shouldn't allow to add more than 10 milestones to project", () => {
     const user = accounts[1]
     addedMilestones = []
 
@@ -272,7 +269,7 @@ contract('Wings', (accounts) => {
         milestone.items, {
           from: user
         })
-    }).catch(done).then(() => {
+    }).then(() => {
       return wings.addMilestone.sendTransaction(
         milestones[0].projectId,
         milestones[0].type,
@@ -283,14 +280,12 @@ contract('Wings', (accounts) => {
         })
     }).then((txId) => {
       assert.equal(txId, null)
-      done()
     }).catch((err) => {
       assert.notEqual(err, null)
-      done()
     })
   })
 
-  it.skip('Should return correct milestones', (done) => {
+  it.skip('Should return correct milestones', () => {
     return wings.getMilestonesCount.call(projectId).then((rawN) => {
       let n = rawN.toNumber()
 
@@ -329,7 +324,7 @@ contract('Wings', (accounts) => {
     })
   })
 
-  it('Shouldn\'t allow to add forecast to project', (done) => {
+  it('Shouldn\'t allow to add forecast to project', () => {
     forecast = {
       projectId: projectId,
       raiting: 0,
@@ -346,11 +341,11 @@ contract('Wings', (accounts) => {
     ).then((txId) => {
       assert.equal(txId, null)
     }).catch((err) => {
-      done()
+      assert.notEqual(err, null)
     })
   })
 
-  it('Should add comment to project', (done) => {
+  it('Should add comment to project', () => {
     let comment = {
       projectId: projectId,
       data: '0x' + crypto.randomBytes(32).toString('hex')
@@ -362,18 +357,18 @@ contract('Wings', (accounts) => {
       from: creator
     }).then((txId) => {
       assert.notEqual(txId, null)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should has one comment', (done) => {
+  it('Should has one comment', () => {
     return wings.getCommentsCount
       .call(projectId)
       .then((count) => {
         assert.equal(count.toNumber(), 1)
-      }).then(done).catch(done)
+      })
   })
 
-  it('Should return correct comment', (done) => {
+  it('Should return correct comment', () => {
     return wings.getComment.call(projectId, 0).then((commentData) => {
       let comment = parser.parseComment(commentData)
       let realComment = addedComments[0]
@@ -381,10 +376,10 @@ contract('Wings', (accounts) => {
       assert.equal(comment.address, creator)
       assert.equal(comment.data, realComment.data)
       assert.equal(comment.projectId, projectId)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should allow to update comments contract', (done) => {
+  it('Should allow to update comments contract', () => {
     return BasicComment.new(storage.address, {
       from: creator
     }).then((basiccomment) => {
@@ -393,18 +388,18 @@ contract('Wings', (accounts) => {
       })
     }).then((txId) => {
       assert.notEqual(txId, null)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should still contains 1 comment even after update', (done) => {
+  it('Should still contains 1 comment even after update', () => {
     return wings.getCommentsCount
       .call(projectId)
       .then((count) => {
         assert.equal(count.toNumber(), 1)
-      }).then(done).catch(done)
+      })
   })
 
-  it('Should add forecast to the project', (done) => {
+  it('Should add forecast to the project', () => {
     return time.moveTime(web3, 172800).then(() => {
       forecast = {
         projectId: projectId,
@@ -422,16 +417,16 @@ contract('Wings', (accounts) => {
         )
     }).then((txId) => {
       assert.notEqual(txId, null)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should return forecast equal to 1', (done) => {
+  it('Should return forecast equal to 1', () => {
     return wings.getForecastCount.call(projectId).then((count) => {
       assert.equal(count.toNumber(), 1)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should get my one forecast', (done) => {
+  it('Should get my one forecast', () => {
     return wings.getForecast.call(projectId, 0).then((rawForecast) => {
       let forecastInst = parser.parseForecast(rawForecast)
 
@@ -440,10 +435,10 @@ contract('Wings', (accounts) => {
       assert.equal(forecastInst.creator, creator)
         // assert.equal(forecastInst.raiting, forecast.raiting);
       assert.equal(forecastInst.message, forecast.message)
-    }).then(done).catch(done)
+    })
   })
 
-  it("Shouldn't allow to add already exists forecast", (done) => {
+  it("Shouldn't allow to add already exists forecast", () => {
     return wings.addForecast.sendTransaction(
         projectId,
         1,
@@ -453,14 +448,12 @@ contract('Wings', (accounts) => {
       }
       ).then(() => {
         assert.equal(1, null)
-        done()
       }).catch((err) => {
         assert.notEqual(err, null)
-        done()
       })
   })
 
-  it('Should add forecast from another account', (done) => {
+  it('Should add forecast from another account', () => {
     const user = accounts[1]
 
     return wings.addForecast.sendTransaction(
@@ -472,16 +465,16 @@ contract('Wings', (accounts) => {
       }
       ).then((txId) => {
         assert.notEqual(txId, null)
-      }).then(done).catch(done)
+      })
   })
 
-  it('Should contains two forecasts', (done) => {
+  it('Should contains two forecasts', () => {
     return wings.getForecastCount.call(projectId).then((count) => {
       assert.equal(count.toNumber(), 2)
-    }).then(done).catch(done)
+    })
   })
 
-  it('Should allow to start crowdsale', (done) => {
+  it('Should allow to start crowdsale', () => {
     const user = accounts[1]
     return wings.startCrowdsale.sendTransaction(
         projectId,
@@ -490,13 +483,13 @@ contract('Wings', (accounts) => {
       }
       ).then((txId) => {
         assert.notEqual(txId, null)
-      }).then(done).catch(done)
+      })
   })
 
-  it('Should return crowdsale contract', (done) => {
+  it('Should return crowdsale contract', () => {
     return wings.getCrowdsale.call(projectId).then((crowdsale) => {
       assert.notEqual(crowdsale, null)
-    }).then(done).catch(done)
+    })
   })
 
 })
