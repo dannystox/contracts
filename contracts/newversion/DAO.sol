@@ -6,22 +6,46 @@ import './milestones/BasicMilestones.sol';
 
 contract DAO is DAOAbstraction {
   modifier onlyReview() {
-    if (block.timestamp < (timestamp + reviewPeriod * 1 hours)) {
+    if (reviewHours < 1) {
+      throw;
+    }
+
+    if (block.timestamp < (timestamp + reviewHours * 1 hours)) {
       _;
     }
   }
 
 
-  function DAO(string _name, bytes32 _infoHash, Categories _category, uint reviewPeriod) {
+  function DAO(string _name, bytes32 _infoHash, Categories _category) {
     projectId = sha256(_name);
     name = _name;
     infoHash = _infoHash;
     category = _category;
     creator = msg.sender;
     timestamp = block.timestamp;
-    reviewPeriod = reviewPeriod;
   }
 
+  /*
+    Set review hours
+  */
+  function setReviewHours(uint _reviewHours) onlyOwner() {
+    if (reviewHours > 0 || _reviewHours < 1) {
+      throw;
+    }
+
+    reviewHours = _reviewHours;
+  }
+
+  /*
+    Get review hours
+  */
+  function getReviewHours() returns constant (uint _reviewHours) {
+    return _reviewHours;
+  }
+
+  /*
+    Update project data
+  */
   function update(bytes32 _infoHash, Categories _category) onlyOwner() onlyReview() {
     infoHash = _infoHash;
     category = _category;
@@ -50,7 +74,7 @@ contract DAO is DAOAbstraction {
   /*
     Enable milestones
   */
-  function enableMilestones() onlyOwner() {
+  function enableMilestones() onlyOwner() onlyReview() {
     milestones = new BasicMilestones();
   }
 

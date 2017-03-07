@@ -35,7 +35,7 @@ contract DAOAbstraction is Ownable {
 
   uint timestamp; // timestamp when project created
 
-  uint reviewPeriod; // review period of project
+  uint reviewHours; // review period of project
 
   /*
     Contracts
@@ -48,6 +48,16 @@ contract DAOAbstraction is Ownable {
   modifier onlyReview();
 
   function DAO(string _name, bytes32 _infoHash, Categories _category);
+
+  /*
+    Set review hours
+  */
+  function setReviewHours(uint _reviewHours) onlyOwner();
+
+  /*
+    Get review hours
+  */
+  function getReviewHours() returns constant (uint _reviewHours);
 
   /*
     Update project data
@@ -76,7 +86,7 @@ contract DAOAbstraction is Ownable {
   /*
     Enable milestones
   */
-  function enableMilestones() onlyOwner();
+  function enableMilestones() onlyOwner() onlyReview();
 
 
   /*
