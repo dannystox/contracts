@@ -36,6 +36,7 @@ contract DAOAbstraction is Ownable {
   uint timestamp; // timestamp when project created
 
   uint reviewHours; // review period of project
+  uint forecastHours; // forecasting hours
 
   /*
     Contracts
@@ -58,6 +59,16 @@ contract DAOAbstraction is Ownable {
     Get review hours
   */
   function getReviewHours() returns constant (uint _reviewHours);
+
+  /*
+    Set forecast hours
+  */
+  function setForecastHours(uint _forecastHours) onlyOwner();
+
+  /*
+    Get forecast hours
+  */
+  function getForecastHours() returns (uint _forecastHours);
 
   /*
     Update project data
