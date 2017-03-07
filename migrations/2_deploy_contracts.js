@@ -6,7 +6,7 @@ const Wings = artifacts.require("../contracts/Wings.sol")
 const WingsCrowdsale = artifacts.require("../contracts/WingsCrowdsale.sol")
 
 module.exports = (deployer) => {
-  deployer.deploy(Token).then(() => {
+  /*deployer.deploy(Token).then(() => {
     return deployer.deploy(Storage)
   }).then(() => {
     return Storage.deployed()
@@ -18,5 +18,5 @@ module.exports = (deployer) => {
     return deployer.deploy(Wings, BasicComment.address)
   }).then(() => {
     return deployer.deploy(WingsCrowdsale)
-  })
+  })*/
 }

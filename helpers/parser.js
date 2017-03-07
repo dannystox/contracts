@@ -36,10 +36,9 @@ const forecastFields = {
 }
 
 const commentFields = {
-  0: 'address',
-  1: 'data',
-  2: 'projectId',
-  3: 'timestamp'
+  0: 'creator',
+  1: 'timestamp',
+  2: 'data'
 }
 
 const internalParser = (arr, fields) => {
