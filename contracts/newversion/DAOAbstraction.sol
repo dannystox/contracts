@@ -1,6 +1,8 @@
 pragma solidity ^0.4.2;
 
-import "../zeppelin/Ownable.sol"
+import "../zeppelin/Ownable.sol";
+import "./comments/CommentsAbstraction.sol";
+import "./milestones/MilestonesAbstraction.sol";
 
 contract DAOAbstraction is Ownable {
   /*
@@ -30,26 +32,80 @@ contract DAOAbstraction is Ownable {
   bytes32 infoHash; // information hash of project
 
   Categories category; // category of project
-  
+
   uint timestamp; // timestamp when project created
+
+  uint reviewPeriod; // review period of project
 
   /*
     Contracts
   */
-  address comments;
-  //address milestones;
+  Comment comments;
+  Milestones milestones;
   //address forecasting;
   //address crowdsale;
+
+  modifier onlyReview();
 
   function DAO(string _name, bytes32 _infoHash, Categories _category);
 
   /*
-    Get Comments Contract
-  */
-  function getComments() returns constant (address _comments);
-
-  /*
     Update project data
   */
-  function update(bytes32 _infoHash, Categories _category) onlyOwner();
+  function update(bytes32 _infoHash, Categories _category) onlyOwner() onlyReview();
+
+  /*
+    Comments
+  */
+
+  /*
+    Get Comments Contract
+  */
+  function getCommentsContract() returns constant (address _comments);
+
+  /*
+    Enable comments
+  */
+  function enableComments() onlyOwner();
+
+
+  /*
+    Milestones
+  */
+
+  /*
+    Enable milestones
+  */
+  function enableMilestones() onlyOwner();
+
+
+  /*
+    Get Milestones Contract
+  */
+  function getMilestonesContract() returns constant (address _milestones);
+
+  /*
+    Add milestone
+  */
+  function addMilestone(uint amount, bytes32 data) onlyOwner() onlyReview();
+
+  /*
+    Update milestone
+  */
+  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() onlyReview();
+
+  /*
+    Remove milestone
+  */
+  function removeMilestone(uint index) onlyOwner() onlyReview();
+
+  /*
+    Get milestone
+  */
+  function getMilestone(uint index) constant returns (uint _amount, bytes32 _items, bool _completed);
+
+  /*
+    Get milestones count
+  */
+  function getMilestonesCount() constant returns (uint _count);
 }

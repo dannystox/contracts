@@ -3,7 +3,7 @@
 */
 pragma solidity ^0.4.2;
 
-contract CommentAbstraction {
+contract CommentsAbstraction {
     /*
       Comment structure
     */

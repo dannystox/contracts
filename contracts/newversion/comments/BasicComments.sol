@@ -5,7 +5,7 @@ pragma solidity ^0.4.2;
 
 import "./CommentAbstraction.sol";
 
-contract BasicComment is CommentAbstraction {
+contract BasicComments is CommentsAbstraction {
   function addComment(bytes32 data) {
     var comment = Comment(
         msg.sender,
