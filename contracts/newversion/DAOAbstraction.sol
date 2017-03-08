@@ -40,6 +40,7 @@ contract DAOAbstraction is Ownable {
   uint forecastHours; // forecasting hours
 
   bool underCap; // is project under cap and latest milestone is cap
+  bool startTimestamp; // time of DAO start activity
 
   /*
     Contracts
@@ -51,7 +52,7 @@ contract DAOAbstraction is Ownable {
 
   modifier onlyReview();
   modifier onlyForecasting();
-  modifier isReady();
+  modifier isStarted(bool _value);
 
   function DAO(string _name, bytes32 _infoHash, Categories _category, bool _underCap);
 
@@ -78,7 +79,12 @@ contract DAOAbstraction is Ownable {
   /*
     Update project data
   */
-  function update(bytes32 _infoHash, Categories _category) onlyOwner() onlyReview();
+  function update(bytes32 _infoHash, Categories _category) onlyOwner() isStarted(true) onlyReview();
+
+  /*
+    Start DAO process
+  */
+  function start() onlyOwner() isStarted(false);
 
   /*
     Comments
@@ -92,7 +98,7 @@ contract DAOAbstraction is Ownable {
   /*
     Enable comments
   */
-  function enableComments() onlyOwner();
+  function enableComments() onlyOwner() isStarted(false);
 
 
   /*
@@ -102,7 +108,7 @@ contract DAOAbstraction is Ownable {
   /*
     Enable milestones
   */
-  function enableMilestones() onlyOwner() onlyReview();
+  function enableMilestones() onlyOwner() isStarted(false);
 
 
   /*
@@ -113,17 +119,17 @@ contract DAOAbstraction is Ownable {
   /*
     Add milestone
   */
-  function addMilestone(uint amount, bytes32 data) onlyOwner() onlyReview();
+  function addMilestone(uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview();
 
   /*
     Update milestone
   */
-  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() onlyReview();
+  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview();
 
   /*
     Remove milestone
   */
-  function removeMilestone(uint index) onlyOwner() onlyReview();
+  function removeMilestone(uint index) onlyOwner() isStarted(true) onlyReview();
 
   /*
     Get milestone
@@ -148,12 +154,12 @@ contract DAOAbstraction is Ownable {
   /*
     Enable forecasts
   */
-  function enableForecasts() onlyOwner();
+  function enableForecasts() onlyOwner() isStarted(false);
 
   /*
     Add forecast
   */
-  addForecast(uint _amount, bytes32 _message) onlyOwner() onlyForecasting();
+  addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting();
 
   /*
     Get user forecast

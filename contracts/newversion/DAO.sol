@@ -6,36 +6,36 @@ import './milestones/BasicMilestones.sol';
 import './forecasts/BasicForecasting.sol';
 
 contract DAO is DAOAbstraction {
-  modifier isReady() {
-    if (comments == address(0) || forecasting == address(0) || milestones == address(0)) {
+  modifier isStarted(bool _value) {
+    if (_value == true) {
+      if (startTimestamp == 0) {
+        throw;
+      }
+
+      _;
+    } else {
+      if (startTimestamp == 0) {
+        _;
+      }
+
       throw;
     }
-
-    _;
   }
 
   modifier onlyReview() {
-    if (reviewHours < 1) {
-      throw;
-    }
-
-    if (block.timestamp < (timestamp + reviewHours * 1 hours)) {
+    if (block.timestamp < (startTimestamp + (reviewHours * 1 hours))) {
       _;
     }
   }
 
   modifier onlyForecasting() {
-    if (forecastHours < 1 || forecasting == address(0)) {
-      throw;
-    }
-
-    if (block.timestamp < (timestamp + (reviewHours + forecastHours) * 1 hours) {
+    if (block.timestamp < (startTimestamp + (reviewHours + forecastHours) * 1 hours) {
       _;
     }
   }
 
-
-  function DAO(string _name, bytes32 _infoHash, Categories _category, bool _underCap) {
+  function DAO(address _owner, string _name, bytes32 _infoHash, Categories _category, bool _underCap) {
+    owner = _owner;
     projectId = sha256(_name);
     name = _name;
     infoHash = _infoHash;
@@ -43,6 +43,21 @@ contract DAO is DAOAbstraction {
     creator = msg.sender;
     timestamp = block.timestamp;
     underCap = _underCap;
+  }
+
+  /*
+    Start DAO process
+  */
+  function start() onlyOwner() isStarted(false) {
+    if (comments == address(0) || milestones == address(0) || forecasting == address(0)) {
+      throw;
+    }
+
+    if (reviewHours == 0 || forecastHours == 0) {
+
+    }
+
+    startTimestamp = block.number;
   }
 
   /*
@@ -66,7 +81,7 @@ contract DAO is DAOAbstraction {
   /*
     Update project data
   */
-  function update(bytes32 _infoHash, Categories _category) onlyOwner() onlyReview() {
+  function update(bytes32 _infoHash, Categories _category) onlyOwner() isStarted(true) onlyReview() {
     infoHash = _infoHash;
     category = _category;
   }
@@ -82,7 +97,7 @@ contract DAO is DAOAbstraction {
     return comments;
   }
 
-  function enableComments() onlyOwner() {
+  function enableComments() onlyOwner() isStarted(false) {
     comments = new BasicComment()
   }
 
@@ -94,7 +109,7 @@ contract DAO is DAOAbstraction {
   /*
     Enable milestones
   */
-  function enableMilestones() onlyOwner() onlyReview() {
+  function enableMilestones() onlyOwner() isStarted(false) {
     milestones = new BasicMilestones();
   }
 
@@ -109,21 +124,21 @@ contract DAO is DAOAbstraction {
   /*
     Add milestone
   */
-  function addMilestone(uint amount, bytes32 data) onlyOwner() onlyReview() {
+  function addMilestone(uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview() {
     milestones.add(amount, data);
   }
 
   /*
     Update milestone
   */
-  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() onlyReview() {
+  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview() {
     milestones.update(index, amount, data);
   }
 
   /*
     Remove milestone
   */
-  function removeMilestone(uint index) onlyOwner() onlyReview() {
+  function removeMilestone(uint index) onlyOwner() isStarted(true) onlyReview() {
     milestones.remove(index);
   }
 
@@ -156,14 +171,14 @@ contract DAO is DAOAbstraction {
   /*
     Enable forecasts
   */
-  function enableForecasts() onlyOwner() onlyForecasting() {
+  function enableForecasts() onlyOwner() isStarted(false) {
     forecasting = new BasicForecasting()
   }
 
   /*
     Add forecast
   */
-  addForecast(uint _amount, bytes32 _message) onlyOwner() onlyForecasting() {
+  addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting() {
     if (underCap) {
       var milestonesSum = milestones.getTotalAmount();
 
