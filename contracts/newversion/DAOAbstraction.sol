@@ -51,6 +51,7 @@ contract DAOAbstraction is Ownable {
 
   modifier onlyReview();
   modifier onlyForecasting();
+  modifier isReady();
 
   function DAO(string _name, bytes32 _infoHash, Categories _category, bool _underCap);
 

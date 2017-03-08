@@ -6,6 +6,14 @@ import './milestones/BasicMilestones.sol';
 import './forecasts/BasicForecasting.sol';
 
 contract DAO is DAOAbstraction {
+  modifier isReady() {
+    if (comments == address(0) || forecasting == address(0) || milestones == address(0)) {
+      throw;
+    }
+
+    _;
+  }
+
   modifier onlyReview() {
     if (reviewHours < 1) {
       throw;
