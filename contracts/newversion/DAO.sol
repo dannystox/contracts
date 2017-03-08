@@ -3,6 +3,7 @@ pragma solidity ^0.4.2;
 import './DAOAbstraction.sol';
 import './comments/BasicComments.sol';
 import './milestones/BasicMilestones.sol';
+import './forecasts/BasicForecasting.sol';
 
 contract DAO is DAOAbstraction {
   modifier onlyReview() {
@@ -15,14 +16,25 @@ contract DAO is DAOAbstraction {
     }
   }
 
+  modifier onlyForecasting() {
+    if (forecastHours < 1 || forecasting == address(0)) {
+      throw;
+    }
 
-  function DAO(string _name, bytes32 _infoHash, Categories _category) {
+    if (block.timestamp < (timestamp + (reviewHours + forecastHours) * 1 hours) {
+      _;
+    }
+  }
+
+
+  function DAO(string _name, bytes32 _infoHash, Categories _category, bool _underCap) {
     projectId = sha256(_name);
     name = _name;
     infoHash = _infoHash;
     category = _category;
     creator = msg.sender;
     timestamp = block.timestamp;
+    underCap = _underCap;
   }
 
   /*
@@ -119,5 +131,60 @@ contract DAO is DAOAbstraction {
   */
   function getMilestonesCount() constant returns (uint _count) {
     return milestones.getTotalCount();
+  }
+
+
+  /*
+    Forecasts
+  */
+
+  /*
+    Get Forecast Contract
+  */
+  function getForecastsContract() returns constant (address _comments) {
+    return forecasting;
+  };
+
+  /*
+    Enable forecasts
+  */
+  function enableForecasts() onlyOwner() onlyForecasting() {
+    forecasting = new BasicForecasting()
+  }
+
+  /*
+    Add forecast
+  */
+  addForecast(uint _amount, bytes32 _message) onlyOwner() onlyForecasting() {
+    if (underCap) {
+      var milestonesSum = milestones.getTotalAmount();
+
+      if (milestonesSum < _amount) {
+        throw;
+      }
+    }
+
+    forecasting.addForecast(msg.sender, _amount, _message);
+  }
+
+  /*
+    Get user forecast
+  */
+  getUserForecast(address _user) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
+    return forecasting.getUserForecast(_user);
+  }
+
+  /*
+    Get forecast
+  */
+  getForecast(uint _index) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
+    return forecasting.get(_index);
+  }
+
+  /*
+    Get forecasts count
+  */
+  getForecastsCount() returns constant (uint _count) {
+    return forecasting.getTotalCount();
   }
 }

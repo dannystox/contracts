@@ -3,6 +3,7 @@ pragma solidity ^0.4.2;
 import "../zeppelin/Ownable.sol";
 import "./comments/CommentsAbstraction.sol";
 import "./milestones/MilestonesAbstraction.sol";
+import "./forecasts/ForecastingAbstraction.sol";
 
 contract DAOAbstraction is Ownable {
   /*
@@ -38,17 +39,20 @@ contract DAOAbstraction is Ownable {
   uint reviewHours; // review period of project
   uint forecastHours; // forecasting hours
 
+  bool underCap; // is project under cap and latest milestone is cap
+
   /*
     Contracts
   */
-  Comment comments;
-  Milestones milestones;
-  //address forecasting;
+  CommentAsbstraction comments;
+  MilestonesAbstraction milestones;
+  ForecastAbstraction forecasting;
   //address crowdsale;
 
   modifier onlyReview();
+  modifier onlyForecasting();
 
-  function DAO(string _name, bytes32 _infoHash, Categories _category);
+  function DAO(string _name, bytes32 _infoHash, Categories _category, bool _underCap);
 
   /*
     Set review hours
@@ -129,4 +133,41 @@ contract DAOAbstraction is Ownable {
     Get milestones count
   */
   function getMilestonesCount() constant returns (uint _count);
+
+
+  /*
+    Forecasts
+  */
+
+  /*
+    Get Forecast Contract
+  */
+  function getForecastsContract() returns constant (address _comments);
+
+  /*
+    Enable forecasts
+  */
+  function enableForecasts() onlyOwner();
+
+  /*
+    Add forecast
+  */
+  addForecast(uint _amount, bytes32 _message) onlyOwner() onlyForecasting();
+
+  /*
+    Get user forecast
+  */
+  getUserForecast(address _user) returns constant (uint _amount, uint _timestamp, bytes32 _message);
+
+  /*
+    Get forecast
+  */
+  getForecast(uint _index) returns constant (uint _amount, uint _timestamp, bytes32 _message);
+
+  /*
+    Get forecasts count
+  */
+  getForecastsCount() returns constant (uint _count);
+
+
 }
