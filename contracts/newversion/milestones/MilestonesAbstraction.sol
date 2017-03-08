@@ -64,4 +64,9 @@ contract MilestoneAbstraction is Ownable {
       Get total milestones count
     */
     function getTotalCount() constant returns (uint _count);
+
+    /*
+      Get milestones sum
+    */
+    function getTotalAmount() constant returns (uint _amount);
 }
