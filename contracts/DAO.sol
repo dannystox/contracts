@@ -74,7 +74,7 @@ contract DAO is DAOAbstraction {
   /*
     Get review hours
   */
-  function getReviewHours() returns constant (uint _reviewHours) {
+  function getReviewHours() constant returns (uint _reviewHours) {
     return _reviewHours;
   }
 
@@ -93,7 +93,7 @@ contract DAO is DAOAbstraction {
   /*
     Get comments contract
   */
-  function getCommentsContract() returns constant (address _comments) {
+  function getCommentsContract() constant returns (address _comments) {
     return comments;
   }
 
@@ -140,7 +140,7 @@ contract DAO is DAOAbstraction {
   /*
     Get Milestones Contract
   */
-  function getMilestonesContract() returns constant (address _milestones) {
+  function getMilestonesContract() constant returns (address _milestones) {
     return milestones;
   }
 

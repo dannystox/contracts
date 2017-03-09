@@ -64,7 +64,7 @@ contract DAOAbstraction is Ownable {
   /*
     Get review hours
   */
-  function getReviewHours() returns constant (uint _reviewHours);
+  function getReviewHours() constant returns (uint _reviewHours);
 
   /*
     Set forecast hours
@@ -74,7 +74,7 @@ contract DAOAbstraction is Ownable {
   /*
     Get forecast hours
   */
-  function getForecastHours() returns (uint _forecastHours);
+  function getForecastHours() constant returns (uint _forecastHours);
 
   /*
     Update project data
@@ -93,7 +93,7 @@ contract DAOAbstraction is Ownable {
   /*
     Get Comments Contract
   */
-  function getCommentsContract() returns constant (address _comments);
+  function getCommentsContract() constant returns (address _comments);
 
   /*
     Enable comments

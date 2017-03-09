@@ -45,35 +45,35 @@ contract Wings is Ownable {
   /*
     Get DAO by Id
   */
-  function getDAOById(bytes32 _daoId) returns constant (address _dao) {
+  function getDAOById(bytes32 _daoId) constant returns (address _dao) {
     return daos[_daoId];
   }
 
   /*
     Get total count of projects
   */
-  function getTotalCount() returns constant (uint _count) {
+  function getTotalCount() constant returns (uint _count) {
     return totalDAOsCount;
   }
 
   /*
     Get DAO Id by index
   */
-  function getDAOId(uint _n) returns constant (bytes32 _id) {
+  function getDAOId(uint _n) constant returns (bytes32 _id) {
     return daosIds[_n];
   }
 
   /*
     Get user daos count
   */
-  function getUserDAOsCount(address _user) returns constant (uint _count) {
+  function getUserDAOsCount(address _user) constant returns (uint _count) {
     return myDAOsCount[_user];
   }
 
   /*
     Get user daos id
   */
-  function getUserDAOsId(uint _n) returns constant (bytes32 _id) {
+  function getUserDAOsId(uint _n) constant returns (bytes32 _id) {
     return myDAOsIds[_n];
   }
 }
