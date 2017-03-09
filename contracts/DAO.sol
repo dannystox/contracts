@@ -97,10 +97,33 @@ contract DAO is DAOAbstraction {
     return comments;
   }
 
+  /*
+    Enable comments contract
+  */
   function enableComments() onlyOwner() isStarted(false) {
     comments = new BasicComment()
   }
 
+  /*
+    Add comment
+  */
+  function addComment(bytes32 _data) isStarted(true) {
+    comments.addComment(msg.sender, _data);
+  }
+
+  /*
+    Get comments count for specific project
+  */
+  function getCommentsCount() constant returns (uint _count) {
+    comments.getCommentsCount();
+  }
+
+  /*
+    Get speific comment by project id and index of comment
+  */
+  function getComment(uint index) constant returns (address _creator, uint _timestamp, bytes32 _data) {
+    return comments.getComment(index);
+  }
 
   /*
     Milestones

@@ -6,9 +6,9 @@ pragma solidity ^0.4.2;
 import "./CommentAbstraction.sol";
 
 contract BasicComments is CommentsAbstraction {
-  function addComment(bytes32 data) {
+  function addComment(address _sender, bytes32 _data) onlyOwner()  {
     var comment = Comment(
-        msg.sender,
+        sender,
         block.timestamp,
         data
       )
@@ -17,7 +17,7 @@ contract BasicComments is CommentsAbstraction {
     commentsCount += 1;
   }
 
-  function getCommentsCount(bytes32 projectId) constant returns (uint _count) {
+  function getCommentsCount() constant returns (uint _count) {
     return commentsCount;
   }
 

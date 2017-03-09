@@ -3,7 +3,9 @@
 */
 pragma solidity ^0.4.2;
 
-contract CommentsAbstraction {
+import "../zeppelin/Ownable.sol"
+
+contract CommentsAbstraction is Ownable {
     /*
       Comment structure
     */
@@ -22,12 +24,12 @@ contract CommentsAbstraction {
     /*
       Add comment
     */
-    function addComment(bytes32 data);
+    function addComment(address _sender, bytes32 _data) onlyOwner();
 
     /*
       Get comments count for specific project
     */
-    function getCommentsCount(bytes32 projectId) constant returns (uint _count);
+    function getCommentsCount() constant returns (uint _count);
 
     /*
       Get speific comment by project id and index of comment

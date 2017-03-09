@@ -100,6 +100,20 @@ contract DAOAbstraction is Ownable {
   */
   function enableComments() onlyOwner() isStarted(false);
 
+  /*
+    Add comment
+  */
+  function addComment(bytes32 _data);
+
+  /*
+    Get comments count for specific project
+  */
+  function getCommentsCount() constant returns (uint _count);
+
+  /*
+    Get speific comment by project id and index of comment
+  */
+  function getComment(uint index) constant returns (address _creator, uint _timestamp, bytes32 _data);
 
   /*
     Milestones
