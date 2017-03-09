@@ -23,15 +23,15 @@ contract ForecastAbstraction is Ownable {
   /*
     Get user forecast
   */
-  getByUser(address _user) returns constant (uint _amount, uint _timestamp, bytes32 _message);
+  getByUser(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message);
 
   /*
     Get forecast
   */
-  get(uint _index) returns constant (uint _amount, uint _timestamp, bytes32 _message);
+  get(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message);
 
   /*
     Get forecasts count
   */
-  getTotalCount() returns constant (uint _count);
+  getTotalCount() constant returns (uint _count);
 }

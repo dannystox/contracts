@@ -26,7 +26,7 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Get user forecast
   */
-  getByUser(address _user) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
+  getByUser(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
     var index = userForecasts[_user];
     var forecast = forecasts[index];
 
@@ -36,7 +36,7 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Get forecast
   */
-  get(uint _index) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
+  get(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
     var forecast = forecasts[_index];
 
     return (forecast.amount, forecast.timestamp, forecast.message);
@@ -45,7 +45,7 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Get forecasts count
   */
-  getTotalCount() returns constant (uint _count) {
+  getTotalCount() constant returns (uint _count) {
     return forecastsCount;
   }
 }
