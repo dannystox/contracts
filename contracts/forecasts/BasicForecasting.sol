@@ -6,8 +6,8 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Add forecast
   */
-  add(address _creator, uint _amount, bytes32 _message) onlyOwner() {
-    if (userForecasts[_creator] != address(0)) {
+  function add(address _creator, uint _amount, bytes32 _message) onlyOwner() {
+    if (userForecasts[_creator].owner != address(0)) {
       throw;
     }
 
@@ -16,7 +16,7 @@ contract BasicForecasting is ForecastingAbstraction {
       _amount,
       block.timestamp,
       _message
-    )
+    );
 
     forecasts[forecastsCount] = forecast;
     userForecasts[_creator] = forecast;
@@ -26,9 +26,8 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Get user forecast
   */
-  getByUser(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
-    var index = userForecasts[_user];
-    var forecast = forecasts[index];
+  function getByUser(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
+    Forecast forecast = userForecasts[_user];
 
     return (forecast.amount, forecast.timestamp, forecast.message);
   }
@@ -36,7 +35,7 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Get forecast
   */
-  get(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
+  function get(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
     var forecast = forecasts[_index];
 
     return (forecast.amount, forecast.timestamp, forecast.message);
@@ -45,7 +44,7 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Get forecasts count
   */
-  getTotalCount() constant returns (uint _count) {
+  function getTotalCount() constant returns (uint _count) {
     return forecastsCount;
   }
 }

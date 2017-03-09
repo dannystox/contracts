@@ -2,7 +2,7 @@ pragma solidity ^0.4.2;
 
 import "../zeppelin/Ownable.sol";
 
-contract ForecastAbstraction is Ownable {
+contract ForecastingAbstraction is Ownable {
   struct Forecast {
     address owner;
     uint amount;
@@ -18,20 +18,20 @@ contract ForecastAbstraction is Ownable {
   /*
     Add forecast
   */
-  add(address _creator, uint _amount, bytes32 _message) onlyOwner();
+  function add(address _creator, uint _amount, bytes32 _message) onlyOwner();
 
   /*
     Get user forecast
   */
-  getByUser(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message);
+  function getByUser(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message);
 
   /*
     Get forecast
   */
-  get(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message);
+  function get(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message);
 
   /*
     Get forecasts count
   */
-  getTotalCount() constant returns (uint _count);
+  function getTotalCount() constant returns (uint _count);
 }

@@ -1,42 +1,18 @@
 pragma solidity ^0.4.2;
 
-import './DAOAbstraction.sol';
-import './comments/BasicComments.sol';
-import './milestones/BasicMilestones.sol';
-import './forecasts/BasicForecasting.sol';
+import "./DAOAbstraction.sol";
+import "./comments/BasicComments.sol";
+import "./milestones/BasicMilestones.sol";
+import "./forecasts/BasicForecasting.sol";
 
-contract DAO is DAOAbstraction {
-  modifier isStarted(bool _value) {
-    if (_value == true) {
-      if (startTimestamp == 0) {
-        throw;
-      }
-
-      _;
-    } else {
-      if (startTimestamp == 0) {
-        _;
-      }
-
+contract DAO is DAOAbstraction {  
+  function DAO(address _owner, string _name, bytes32 _infoHash, uint _category, bool _underCap) {
+    if (_category > 5) {
       throw;
     }
-  }
 
-  modifier onlyReview() {
-    if (block.timestamp < (startTimestamp + (reviewHours * 1 hours))) {
-      _;
-    }
-  }
-
-  modifier onlyForecasting() {
-    if (block.timestamp < (startTimestamp + (reviewHours + forecastHours) * 1 hours) {
-      _;
-    }
-  }
-
-  function DAO(address _owner, string _name, bytes32 _infoHash, Categories _category, bool _underCap) {
     owner = _owner;
-    projectId = sha256(_name);
+    id = sha256(_name);
     name = _name;
     infoHash = _infoHash;
     category = _category;
@@ -81,7 +57,11 @@ contract DAO is DAOAbstraction {
   /*
     Update project data
   */
-  function update(bytes32 _infoHash, Categories _category) onlyOwner() isStarted(true) onlyReview() {
+  function update(bytes32 _infoHash, uint _category) onlyOwner() isStarted(true) onlyReview() {
+    if (_category > 5) {
+      throw;
+    }
+
     infoHash = _infoHash;
     category = _category;
   }
@@ -101,7 +81,7 @@ contract DAO is DAOAbstraction {
     Enable comments contract
   */
   function enableComments() onlyOwner() isStarted(false) {
-    comments = new BasicComment()
+    comments = new BasicComments();
   }
 
   /*
@@ -183,25 +163,32 @@ contract DAO is DAOAbstraction {
   /*
     Forecasts
   */
+  function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false) {
+    forecastHours = _forecastHours;
+  }
+
+  function getForecastHours() constant returns (uint _forecastHours) {
+    return forecastHours;
+  }
 
   /*
     Get Forecast Contract
   */
-  function getForecastsContract() returns constant (address _comments) {
+  function getForecastsContract() constant returns (address _comments) {
     return forecasting;
-  };
+  }
 
   /*
     Enable forecasts
   */
   function enableForecasts() onlyOwner() isStarted(false) {
-    forecasting = new BasicForecasting()
+    forecasting = new BasicForecasting();
   }
 
   /*
     Add forecast
   */
-  addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting() {
+  function addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting() {
     if (underCap) {
       var milestonesSum = milestones.getTotalAmount();
 
@@ -210,27 +197,27 @@ contract DAO is DAOAbstraction {
       }
     }
 
-    forecasting.addForecast(msg.sender, _amount, _message);
+    forecasting.add(msg.sender, _amount, _message);
   }
 
   /*
     Get user forecast
   */
-  getUserForecast(address _user) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
-    return forecasting.getUserForecast(_user);
+  function getUserForecast(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
+    return forecasting.getByUser(_user);
   }
 
   /*
     Get forecast
   */
-  getForecast(uint _index) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
+  function getForecast(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
     return forecasting.get(_index);
   }
 
   /*
     Get forecasts count
   */
-  getForecastsCount() returns constant (uint _count) {
+  function getForecastsCount() constant returns (uint _count) {
     return forecasting.getTotalCount();
   }
 }

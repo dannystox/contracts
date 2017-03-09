@@ -32,7 +32,7 @@ contract DAOAbstraction is Ownable {
   string name; // name of project
   bytes32 infoHash; // information hash of project
 
-  Categories category; // category of project
+  uint category; // category of project
 
   uint timestamp; // timestamp when project created
 
@@ -40,21 +40,43 @@ contract DAOAbstraction is Ownable {
   uint forecastHours; // forecasting hours
 
   bool underCap; // is project under cap and latest milestone is cap
-  bool startTimestamp; // time of DAO start activity
+  uint startTimestamp; // time of DAO start activity
 
   /*
     Contracts
   */
-  CommentAsbstraction comments;
+  CommentsAbstraction comments;
   MilestonesAbstraction milestones;
-  ForecastAbstraction forecasting;
+  ForecastingAbstraction forecasting;
   //address crowdsale;
 
-  modifier onlyReview();
-  modifier onlyForecasting();
-  modifier isStarted(bool _value);
+  modifier isStarted(bool _value) {
+    if (_value == true) {
+      if (startTimestamp == 0) {
+        throw;
+      }
 
-  function DAO(string _name, bytes32 _infoHash, Categories _category, bool _underCap);
+      _;
+    } else {
+      if (startTimestamp == 0) {
+        _;
+      }
+
+      throw;
+    }
+  }
+
+  modifier onlyReview() {
+    if (block.timestamp < (startTimestamp + (reviewHours * 1 hours))) {
+      _;
+    }
+  }
+
+  modifier onlyForecasting() {
+    if (block.timestamp < (startTimestamp + (reviewHours + forecastHours) * 1 hours)) {
+      _;
+    }
+  }
 
   /*
     Set review hours
@@ -69,7 +91,7 @@ contract DAOAbstraction is Ownable {
   /*
     Set forecast hours
   */
-  function setForecastHours(uint _forecastHours) onlyOwner();
+  function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false);
 
   /*
     Get forecast hours
@@ -79,7 +101,7 @@ contract DAOAbstraction is Ownable {
   /*
     Update project data
   */
-  function update(bytes32 _infoHash, Categories _category) onlyOwner() isStarted(true) onlyReview();
+  function update(bytes32 _infoHash, uint _category) onlyOwner() isStarted(true) onlyReview();
 
   /*
     Start DAO process
@@ -103,7 +125,7 @@ contract DAOAbstraction is Ownable {
   /*
     Add comment
   */
-  function addComment(bytes32 _data);
+  function addComment(bytes32 _data) isStarted(true);
 
   /*
     Get comments count for specific project
@@ -128,7 +150,7 @@ contract DAOAbstraction is Ownable {
   /*
     Get Milestones Contract
   */
-  function getMilestonesContract() returns constant (address _milestones);
+  function getMilestonesContract() constant returns (address _milestones);
 
   /*
     Add milestone
@@ -163,7 +185,7 @@ contract DAOAbstraction is Ownable {
   /*
     Get Forecast Contract
   */
-  function getForecastsContract() returns constant (address _comments);
+  function getForecastsContract() constant returns (address _comments);
 
   /*
     Enable forecasts
@@ -173,22 +195,22 @@ contract DAOAbstraction is Ownable {
   /*
     Add forecast
   */
-  addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting();
+  function addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting();
 
   /*
     Get user forecast
   */
-  getUserForecast(address _user) returns constant (uint _amount, uint _timestamp, bytes32 _message);
+  function getUserForecast(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message);
 
   /*
     Get forecast
   */
-  getForecast(uint _index) returns constant (uint _amount, uint _timestamp, bytes32 _message);
+  function getForecast(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message);
 
   /*
     Get forecasts count
   */
-  getForecastsCount() returns constant (uint _count);
+  function getForecastsCount() constant returns (uint _count);
 
 
 }

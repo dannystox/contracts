@@ -1,6 +1,7 @@
 pragma solidity ^0.4.2;
 
 import "./DAOAbstraction.sol";
+import "./DAO.sol";
 import "./zeppelin/Ownable.sol";
 
 contract Wings is Ownable {
@@ -28,7 +29,7 @@ contract Wings is Ownable {
   /*
     Add new project to Wings
   */
-  function addDAO(string _name, bytes32 _infoHash, Categories _category, bool _underCap) {
+  function addDAO(string _name, bytes32 _infoHash, uint _category, bool _underCap) {
     bytes32 _daoId = sha256(_name);
 
     if (daos[_daoId] != address(0)) {
@@ -73,7 +74,7 @@ contract Wings is Ownable {
   /*
     Get user daos id
   */
-  function getUserDAOsId(uint _n) constant returns (bytes32 _id) {
-    return myDAOsIds[_n];
+  function getUserDAOsId(address _user, uint _n) constant returns (bytes32 _id) {
+    return myDAOsIds[_user][_n];
   }
 }

@@ -3,7 +3,7 @@
 */
 pragma solidity ^0.4.2;
 
-import "../zeppelin/Ownable.sol"
+import "../zeppelin/Ownable.sol";
 
 contract CommentsAbstraction is Ownable {
     /*
@@ -18,7 +18,7 @@ contract CommentsAbstraction is Ownable {
     /*
       List of comments
     */
-    mapping(uint => Comment) public comments;
+    mapping(uint => Comment) comments;
     uint public commentsCount;
 
     /*

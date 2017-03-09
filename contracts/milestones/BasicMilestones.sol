@@ -5,7 +5,7 @@ pragma solidity ^0.4.2;
 
 import "./MilestonesAbstraction.sol";
 
-contract BasicMilestones is MilestoneAbstraction {
+contract BasicMilestones is MilestonesAbstraction {
   function BasicMilestones() {
     maxCount = 10;
   }
@@ -14,13 +14,12 @@ contract BasicMilestones is MilestoneAbstraction {
     Adding milestones
   */
   function add(uint amount, bytes32 items) onlyOwner() {
-    if (milestonesCount == _maxCount || amount < 1) {
+    if (milestonesCount == maxCount || amount < 1) {
       throw;
     }
 
     var milestone = Milestone(block.timestamp, block.timestamp, amount, items, false);
-    milestones[count] = milestone;
-    milestonesCount++;
+    milestones[milestonesCount++] = milestone;
   }
 
   /*
@@ -58,7 +57,7 @@ contract BasicMilestones is MilestoneAbstraction {
     Temporary version.
     ToDo: Use forecast consensus to complete milestones
   */
-  function complete(uint index) onlyOnwer() {
+  function complete(uint index) onlyOwner() {
     if (index > milestonesCount) {
       throw;
     }
@@ -86,7 +85,7 @@ contract BasicMilestones is MilestoneAbstraction {
     Get milestones sum
   */
   function getTotalAmount() constant returns (uint _amount) {
-    var sum = 0;
+    uint sum = 0;
 
     for (var i = 0; i < milestonesCount; i++) {
       sum += milestones[i].amount;

@@ -3,15 +3,15 @@
 */
 pragma solidity ^0.4.2;
 
-import "./CommentAbstraction.sol";
+import "./CommentsAbstraction.sol";
 
 contract BasicComments is CommentsAbstraction {
   function addComment(address _sender, bytes32 _data) onlyOwner()  {
     var comment = Comment(
-        sender,
+        _sender,
         block.timestamp,
-        data
-      )
+        _data
+      );
 
     comments[commentsCount] = comment;
     commentsCount += 1;

@@ -3,9 +3,9 @@
 */
 pragma solidity ^0.4.2;
 
-import "../zeppelin/Ownable.sol"
+import "../zeppelin/Ownable.sol";
 
-contract MilestoneAbstraction is Ownable {
+contract MilestonesAbstraction is Ownable {
     /*
       Milestone structure
     */
@@ -53,7 +53,7 @@ contract MilestoneAbstraction is Ownable {
       Temporary version.
       ToDo: Use forecast consensus to complete milestones
     */
-    function complete(uint index) onlyOnwer();
+    function complete(uint index) onlyOwner();
 
     /*
       Get milestone by index

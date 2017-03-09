@@ -1,6 +1,6 @@
 pragma solidity ^0.4.2;
 
-import './zeppelin/token/StandardToken.sol';
+import "./zeppelin/token/StandardToken.sol";
 
 contract Token is StandardToken {
   string public name = "WINGS";
