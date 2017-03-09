@@ -1,56 +1,213 @@
 pragma solidity ^0.4.2;
 
-import './comments/CommentAbstraction.sol';
-import './WingsCrowdsale.sol';
+import './DAOAbstraction.sol';
+import './comments/BasicComments.sol';
+import './milestones/BasicMilestones.sol';
+import './forecasts/BasicForecasting.sol';
 
-contract DAO {
-  enum Categories {
-    Software,
-    Hardware,
-    Service,
-    Platform,
-    NonProfit
+contract DAO is DAOAbstraction {
+  modifier isStarted(bool _value) {
+    if (_value == true) {
+      if (startTimestamp == 0) {
+        throw;
+      }
+
+      _;
+    } else {
+      if (startTimestamp == 0) {
+        _;
+      }
+
+      throw;
+    }
   }
 
-  enum RewardTypes {
-    PercentDaoTokens,
-    PercentCollectedFunds,
-    Both
+  modifier onlyReview() {
+    if (block.timestamp < (startTimestamp + (reviewHours * 1 hours))) {
+      _;
+    }
   }
 
-  enum ProjectPeriod {
-    Review,
-    Forecasting,
-    Funding,
-    AfterFunding
+  modifier onlyForecasting() {
+    if (block.timestamp < (startTimestamp + (reviewHours + forecastHours) * 1 hours) {
+      _;
+    }
   }
 
-  struct Project {
-    bytes32 id; // id of project
-    //address crowdsale; // crowdsale contract of project
-    string name; // name of project
+  function DAO(address _owner, string _name, bytes32 _infoHash, Categories _category, bool _underCap) {
+    owner = _owner;
+    projectId = sha256(_name);
+    name = _name;
+    infoHash = _infoHash;
+    category = _category;
+    creator = msg.sender;
+    timestamp = block.timestamp;
+    underCap = _underCap;
+  }
 
-    bytes32 shortBlurb; // hash of shortBlurb
-    bytes32 logoHash; // hash of project logotype
+  /*
+    Start DAO process
+  */
+  function start() onlyOwner() isStarted(false) {
+    if (comments == address(0) || milestones == address(0) || forecasting == address(0)) {
+      throw;
+    }
 
-    Categories category; // category of project
-    RewardTypes rewardType; // reward type
-    uint rewardPercent; // reward percent
-    uint duration; // duration of token sale
-    uint goal; // goal that project expect to collect
+    if (reviewHours == 0 || forecastHours == 0) {
 
-    string videolink; // link to the video
-    bytes32 story;
+    }
 
-    address creator; // creator of the projects
+    startTimestamp = block.number;
+  }
 
-    uint timestamp; // timestamp when project created
-    bool cap; // project cupped under latest milestone
+  /*
+    Set review hours
+  */
+  function setReviewHours(uint _reviewHours) onlyOwner() {
+    if (reviewHours > 0 || _reviewHours < 1) {
+      throw;
+    }
 
-    uint milestonesCount; // amount of milestones
-    uint forecastsCount;  // amount of forecasts
+    reviewHours = _reviewHours;
+  }
 
-    mapping(uint => Milestone) milestones; // Milestones
-    mapping(uint => Forecast) forecasts; // Forecasts
+  /*
+    Get review hours
+  */
+  function getReviewHours() returns constant (uint _reviewHours) {
+    return _reviewHours;
+  }
+
+  /*
+    Update project data
+  */
+  function update(bytes32 _infoHash, Categories _category) onlyOwner() isStarted(true) onlyReview() {
+    infoHash = _infoHash;
+    category = _category;
+  }
+
+  /*
+    Comments
+  */
+
+  /*
+    Get comments contract
+  */
+  function getCommentsContract() returns constant (address _comments) {
+    return comments;
+  }
+
+  function enableComments() onlyOwner() isStarted(false) {
+    comments = new BasicComment()
+  }
+
+
+  /*
+    Milestones
+  */
+
+  /*
+    Enable milestones
+  */
+  function enableMilestones() onlyOwner() isStarted(false) {
+    milestones = new BasicMilestones();
+  }
+
+
+  /*
+    Get Milestones Contract
+  */
+  function getMilestonesContract() returns constant (address _milestones) {
+    return milestones;
+  }
+
+  /*
+    Add milestone
+  */
+  function addMilestone(uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview() {
+    milestones.add(amount, data);
+  }
+
+  /*
+    Update milestone
+  */
+  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview() {
+    milestones.update(index, amount, data);
+  }
+
+  /*
+    Remove milestone
+  */
+  function removeMilestone(uint index) onlyOwner() isStarted(true) onlyReview() {
+    milestones.remove(index);
+  }
+
+  /*
+    Get milestone
+  */
+  function getMilestone(uint index) constant returns (uint _amount, bytes32 _items, bool _completed) {
+    return milestones.get(index);
+  }
+
+  /*
+    Get milestones count
+  */
+  function getMilestonesCount() constant returns (uint _count) {
+    return milestones.getTotalCount();
+  }
+
+
+  /*
+    Forecasts
+  */
+
+  /*
+    Get Forecast Contract
+  */
+  function getForecastsContract() returns constant (address _comments) {
+    return forecasting;
+  };
+
+  /*
+    Enable forecasts
+  */
+  function enableForecasts() onlyOwner() isStarted(false) {
+    forecasting = new BasicForecasting()
+  }
+
+  /*
+    Add forecast
+  */
+  addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting() {
+    if (underCap) {
+      var milestonesSum = milestones.getTotalAmount();
+
+      if (milestonesSum < _amount) {
+        throw;
+      }
+    }
+
+    forecasting.addForecast(msg.sender, _amount, _message);
+  }
+
+  /*
+    Get user forecast
+  */
+  getUserForecast(address _user) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
+    return forecasting.getUserForecast(_user);
+  }
+
+  /*
+    Get forecast
+  */
+  getForecast(uint _index) returns constant (uint _amount, uint _timestamp, bytes32 _message) {
+    return forecasting.get(_index);
+  }
+
+  /*
+    Get forecasts count
+  */
+  getForecastsCount() returns constant (uint _count) {
+    return forecasting.getTotalCount();
   }
 }

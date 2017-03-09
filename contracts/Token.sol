@@ -4,12 +4,11 @@ import './zeppelin/token/StandardToken.sol';
 
 contract Token is StandardToken {
   string public name = "WINGS";
-  string public symbol = "WNG";
+  string public symbol = "WINGS";
 
   function Token() {
     var total = 100000000000000000000000000;
     totalSupply = total;
     balances[msg.sender] = total;
   }
-
 }
