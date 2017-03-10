@@ -27,7 +27,7 @@ contract BasicForecasting is ForecastingAbstraction {
     Get user forecast
   */
   function getByUser(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message) {
-    Forecast forecast = userForecasts[_user];
+    var forecast = userForecasts[_user];
 
     return (forecast.amount, forecast.timestamp, forecast.message);
   }
