@@ -6,9 +6,5 @@ module.exports = {
       network_id: '*',
       from: '0x03e600f572078e25ab987a34d68c296c69e2ebc4'
     }
-  },
-  rpc: {
-    host: 'localhost',
-    port: 8545
   }
 }
