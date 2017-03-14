@@ -21,17 +21,17 @@ contract MilestonesAbstraction is Ownable {
     /*
       List of milestones
     */
-    mapping(uint => Milestone) milestones;
+    mapping(uint => Milestone) public milestones;
 
     /*
       Milestones count
     */
-    uint milestonesCount;
+    uint public milestonesCount;
 
     /*
       Max count of milestones
     */
-    uint maxCount;
+    uint public maxCount;
 
     /*
       Adding milestones
@@ -59,11 +59,6 @@ contract MilestonesAbstraction is Ownable {
       Get milestone by index
     */
     function get(uint index) constant returns (uint _amount, bytes32 _items, bool _completed);
-
-    /*
-      Get total milestones count
-    */
-    function getTotalCount() constant returns (uint _count);
 
     /*
       Get milestones sum

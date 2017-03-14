@@ -5,7 +5,7 @@ import "./comments/BasicComments.sol";
 import "./milestones/BasicMilestones.sol";
 import "./forecasts/BasicForecasting.sol";
 
-contract DAO is DAOAbstraction {  
+contract DAO is DAOAbstraction {
   function DAO(address _owner, string _name, bytes32 _infoHash, uint _category, bool _underCap) {
     if (_category > 5) {
       throw;
@@ -48,13 +48,6 @@ contract DAO is DAOAbstraction {
   }
 
   /*
-    Get review hours
-  */
-  function getReviewHours() constant returns (uint _reviewHours) {
-    return _reviewHours;
-  }
-
-  /*
     Update project data
   */
   function update(bytes32 _infoHash, uint _category) onlyOwner() isStarted(true) onlyReview() {
@@ -69,13 +62,6 @@ contract DAO is DAOAbstraction {
   /*
     Comments
   */
-
-  /*
-    Get comments contract
-  */
-  function getCommentsContract() constant returns (address _comments) {
-    return comments;
-  }
 
   /*
     Enable comments contract
@@ -116,14 +102,6 @@ contract DAO is DAOAbstraction {
     milestones = new BasicMilestones();
   }
 
-
-  /*
-    Get Milestones Contract
-  */
-  function getMilestonesContract() constant returns (address _milestones) {
-    return milestones;
-  }
-
   /*
     Add milestone
   */
@@ -156,7 +134,7 @@ contract DAO is DAOAbstraction {
     Get milestones count
   */
   function getMilestonesCount() constant returns (uint _count) {
-    return milestones.getTotalCount();
+    return milestones.milestonesCount();
   }
 
 
@@ -165,17 +143,6 @@ contract DAO is DAOAbstraction {
   */
   function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false) {
     forecastHours = _forecastHours;
-  }
-
-  function getForecastHours() constant returns (uint _forecastHours) {
-    return forecastHours;
-  }
-
-  /*
-    Get Forecast Contract
-  */
-  function getForecastsContract() constant returns (address _comments) {
-    return forecasting;
   }
 
   /*
@@ -218,6 +185,6 @@ contract DAO is DAOAbstraction {
     Get forecasts count
   */
   function getForecastsCount() constant returns (uint _count) {
-    return forecasting.getTotalCount();
+    return forecasting.forecastsCount();
   }
 }

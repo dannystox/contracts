@@ -27,20 +27,20 @@ contract DAOAbstraction is Ownable {
     AfterFunding
   }
 
-  address creator; // creator of the projects
-  bytes32 id; // id of project
-  string name; // name of project
-  bytes32 infoHash; // information hash of project
+  address public creator; // creator of the projects
+  bytes32 public id; // id of project
+  string public name; // name of project
+  bytes32 public infoHash; // information hash of project
 
-  uint category; // category of project
+  uint public category; // category of project
 
-  uint timestamp; // timestamp when project created
+  uint public timestamp; // timestamp when project created
 
-  uint reviewHours; // review period of project
-  uint forecastHours; // forecasting hours
+  uint public reviewHours; // review period of project
+  uint public forecastHours; // forecasting hours
 
-  bool underCap; // is project under cap and latest milestone is cap
-  uint startTimestamp; // time of DAO start activity
+  bool public underCap; // is project under cap and latest milestone is cap
+  uint public startTimestamp; // time of DAO start activity
 
   /*
     Contracts
@@ -84,19 +84,9 @@ contract DAOAbstraction is Ownable {
   function setReviewHours(uint _reviewHours) onlyOwner();
 
   /*
-    Get review hours
-  */
-  function getReviewHours() constant returns (uint _reviewHours);
-
-  /*
     Set forecast hours
   */
   function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false);
-
-  /*
-    Get forecast hours
-  */
-  function getForecastHours() constant returns (uint _forecastHours);
 
   /*
     Update project data
@@ -111,11 +101,6 @@ contract DAOAbstraction is Ownable {
   /*
     Comments
   */
-
-  /*
-    Get Comments Contract
-  */
-  function getCommentsContract() constant returns (address _comments);
 
   /*
     Enable comments
@@ -146,12 +131,6 @@ contract DAOAbstraction is Ownable {
   */
   function enableMilestones() onlyOwner() isStarted(false);
 
-
-  /*
-    Get Milestones Contract
-  */
-  function getMilestonesContract() constant returns (address _milestones);
-
   /*
     Add milestone
   */
@@ -181,11 +160,6 @@ contract DAOAbstraction is Ownable {
   /*
     Forecasts
   */
-
-  /*
-    Get Forecast Contract
-  */
-  function getForecastsContract() constant returns (address _comments);
 
   /*
     Enable forecasts

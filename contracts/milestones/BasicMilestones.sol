@@ -74,12 +74,6 @@ contract BasicMilestones is MilestonesAbstraction {
     return (milestone.amount, milestone.items, milestone.completed);
   }
 
-  /*
-    Get total milestones count
-  */
-  function getTotalCount() constant returns (uint _count) {
-    return milestonesCount;
-  }
 
   /*
     Get milestones sum

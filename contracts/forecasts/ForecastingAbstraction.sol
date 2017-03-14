@@ -10,10 +10,10 @@ contract ForecastingAbstraction is Ownable {
     bytes32 message;
   }
 
-  mapping(uint => Forecast) forecasts;
-  mapping(address => Forecast) userForecasts;
+  mapping(uint => Forecast) public forecasts;
+  mapping(address => Forecast) public userForecasts;
 
-  uint forecastsCount;
+  uint public forecastsCount;
 
   /*
     Add forecast
@@ -29,9 +29,4 @@ contract ForecastingAbstraction is Ownable {
     Get forecast
   */
   function get(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message);
-
-  /*
-    Get forecasts count
-  */
-  function getTotalCount() constant returns (uint _count);
 }

@@ -40,11 +40,4 @@ contract BasicForecasting is ForecastingAbstraction {
 
     return (forecast.amount, forecast.timestamp, forecast.message);
   }
-
-  /*
-    Get forecasts count
-  */
-  function getTotalCount() constant returns (uint _count) {
-    return forecastsCount;
-  }
 }
