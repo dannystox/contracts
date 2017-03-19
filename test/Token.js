@@ -34,7 +34,7 @@ contract('Token', () => {
     }).then(() => {
       return Promise.each(web3.eth.accounts, account => {
         return token.balanceOf.call(account).then((balance) => {
-          assert.equal(balance.toString(), '0')
+          assert.equal(balance.toString(10), '0')
         })
       })
     })
@@ -51,7 +51,7 @@ contract('Token', () => {
   it('Should has accounts balances', () => {
     return Promise.each(web3.eth.accounts, account => {
       return token.balanceOf.call(account).then((balance) => {
-        assert.equal(balance.toString(), toSend.toString())
+        assert.equal(balance.toString(10), toSend.toString(10))
       })
     })
   })
@@ -62,7 +62,7 @@ contract('Token', () => {
     }).then(() => {
       return token.balanceOf.call(creator)
     }).then(balance => {
-      assert.equal(balance.toString(), toSend.toString())
+      assert.equal(balance.toString(10), toSend.toString(10))
     })
   })
 
@@ -80,7 +80,7 @@ contract('Token', () => {
       ])
     }).then((balances) => {
       balances.forEach(balance => {
-        assert.equal(balance.toString(), toSend.toString())
+        assert.equal(balance.toString(10), toSend.toString(10))
       })
     })
   })
@@ -101,8 +101,8 @@ contract('Token', () => {
         token.balanceOf.call(creator),
         token.balanceOf.call(web3.eth.accounts[1]),
         (creatorBalance, userBalance) => {
-          assert.equal(creatorBalance.toString(), '0')
-          assert.equal(userBalance.toString(), new BigNumber(toSend).mul(2).toString())
+          assert.equal(creatorBalance.toString(10), '0')
+          assert.equal(userBalance.toString(10), new BigNumber(toSend).mul(2).toString(10))
         }
       )
     })
@@ -114,7 +114,7 @@ contract('Token', () => {
     }).then(() => {
       return token.balanceOf(web3.eth.accounts[3])
     }).then((balance) => {
-      assert.equal(balance.toString(), toSend.toString())
+      assert.equal(balance.toString(10), toSend.toString(10))
     })
   })
 
@@ -128,7 +128,8 @@ contract('Token', () => {
     }).then(() => {
       return token.balanceOf(web3.eth.accounts[3])
     }).then((balance) => {
-      assert.equal(balance.toString(), new BigNumber(toSend).add(web3.toWei(3, 'ether')).toString())
+      assert.equal(balance.toString(10), new BigNumber(toSend).add(web3.toWei(3, 'ether')).toString(10))
     })
   })
+
 })

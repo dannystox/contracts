@@ -8,6 +8,25 @@ import "./zeppelin/token/StandardToken.sol";
   Added allocation for users who participiated in Wings Campagin.
 */
 contract Token is StandardToken, Ownable {
+  /*
+    Premine scturcture
+  */
+  struct Premine {
+    address account;
+    uint startTimestamp;
+    uint lastTimeReached;
+    uint monthes;
+    uint monthlyPayment;
+  }
+
+  /*
+    List of perminers
+  */
+  mapping(address => Premine) preminers;
+
+  /*
+    Token Name & Token Symbol
+  */
   string public name = "WINGS";
   string public symbol = "WINGS";
 
@@ -64,6 +83,9 @@ contract Token is StandardToken, Ownable {
     allocation = false;
   }
 
+  /*
+    Standard Token functional
+  */
   function transfer(address _to, uint _value) whenAllocation(false) returns (bool success) {
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
@@ -87,4 +109,58 @@ contract Token is StandardToken, Ownable {
     return true;
   }
 
+  /*
+    Premine functional
+  */
+
+  /*
+    Add pre-mine account
+  */
+  function addPreminer(address preminer, uint initialBalance, uint startTime, uint monthes, uint monthlyPayment) onlyOwner() whenAllocation(true) {
+    if (preminers[preminer].account != address(0)) {
+      throw;
+    }
+
+    var premine = Premine(
+        preminer,
+        startTime,
+        startTime,
+        monthes,
+        monthlyPayment
+      );
+
+    balances[preminer] = safeAdd(balances[preminer], initialBalance);
+  }
+
+  /*
+    Release premine when preminer asking
+  */
+  function releasePremine() whenAllocation(false) {
+    var preminer = preminers[msg.sender];
+
+    if (preminer.account != address(0)) {
+      throw;
+    }
+
+    // ToDo: Need to check how it's valid and cover with a lot of tests
+    if ((preminer.startTimestamp + preminer.monthes * 31 days) < preminer.lastTimeReached) {
+      throw;
+    }
+
+    // Calculate different timestamp
+    uint diffTime = block.timestamp - preminer.lastTimeReached;
+    uint diffMonthes = diffTime / 2678400;
+
+    // Calculated different monthes
+    if (diffMonthes > preminer.monthes) {
+      diffMonthes = preminer.monthes;
+    }
+
+    // Add pre-mine to balance
+    uint payment = diffMonthes * preminer.monthlyPayment;
+    balances[preminer.account] = safeAdd(balances[preminer.account], payment);
+
+    // Update when preminer asked to premine last time
+    preminer.lastTimeReached = block.timestamp;
+  }
 }
