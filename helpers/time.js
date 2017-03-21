@@ -13,7 +13,16 @@ const moveTime = (web3, value) => {
   })
 }
 
+const currentTime = () => {
+  return Math.floor(new Date().getTime() / 1000);
+}
+
+const toSeconds = (seconds) => {
+  return Math.floor(seconds / 1000)
+}
 
 module.exports = {
-  moveTime: moveTime
+  move: moveTime,
+  now: currentTime,
+  toSeconds: toSeconds
 }

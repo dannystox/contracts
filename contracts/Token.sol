@@ -9,20 +9,29 @@ import "./zeppelin/token/StandardToken.sol";
 */
 contract Token is StandardToken, Ownable {
   /*
+    Premine allocations
+  */
+  struct PremineAllocation {
+    uint timestamp;
+    bool done;
+  }
+
+  /*
     Premine scturcture
   */
-  struct Premine {
+  struct Preminer {
     address account;
-    uint startTimestamp;
-    uint lastTimeReached;
-    uint monthes;
     uint monthlyPayment;
+    uint latestAllocation;
+
+    uint allocationsCount;
+    mapping(uint => PremineAllocation) allocations;
   }
 
   /*
     List of perminers
   */
-  mapping(address => Premine) preminers;
+  mapping(address => Preminer) preminers;
 
   /*
     Token Name & Token Symbol
@@ -116,51 +125,76 @@ contract Token is StandardToken, Ownable {
   /*
     Add pre-mine account
   */
-  function addPreminer(address preminer, uint initialBalance, uint startTime, uint monthes, uint monthlyPayment) onlyOwner() whenAllocation(true) {
+  function addPreminer(address preminer, uint initialBalance, uint monthlyPayment) onlyOwner() whenAllocation(true) {
     if (preminers[preminer].account != address(0)) {
       throw;
     }
 
-    var premine = Premine(
+    var premine = Preminer(
         preminer,
-        startTime,
-        startTime,
-        monthes,
-        monthlyPayment
+        monthlyPayment,
+        0,
+        0
       );
 
+
     balances[preminer] = safeAdd(balances[preminer], initialBalance);
+    preminers[preminer] = premine;
+  }
+
+  /*
+    Add pre-mine allocation
+  */
+  function addPremineAllocation(address _preminer, uint _time) onlyOwner() whenAllocation(true) {
+    var preminer = preminers[_preminer];
+
+    if (preminer.account == address(0)) {
+      throw;
+    }
+
+    var allocation = PremineAllocation(
+        _time,
+        false
+      );
+
+    if (preminer.allocationsCount > 0) {
+      var previousAllocation = preminer.allocations[preminer.allocationsCount-1];
+
+      if (previousAllocation.timestamp > _time) {
+        throw;
+      }
+
+      preminer.allocations[preminer.allocationsCount++] = allocation;
+    } else {
+      preminer.allocations[preminer.allocationsCount++] = allocation;
+    }
   }
 
   /*
     Release premine when preminer asking
+    Gas usage: 0x5786 or 22406 GAS.
+    Let's add limitation to 20 per cycle for cycle to be sure it could execute.
   */
   function releasePremine() whenAllocation(false) {
     var preminer = preminers[msg.sender];
 
-    if (preminer.account != address(0)) {
+    if (preminer.account == address(0)) {
       throw;
     }
 
-    // ToDo: Need to check how it's valid and cover with a lot of tests
-    if ((preminer.startTimestamp + preminer.monthes * 31 days) < preminer.lastTimeReached) {
-      throw;
+    for (var i = preminer.latestAllocation; i < preminer.allocationsCount; i++) {
+      if (preminer.allocations[i].timestamp < block.timestamp) {
+        if (preminer.allocations[i].done == true) {
+          continue;
+        }
+
+        preminer.allocations[i].done = true;
+
+        balances[preminer.account] = safeAdd(balances[preminer.account], preminer.monthlyPayment);
+        preminer.latestAllocation = i;
+      } else {
+        break;
+      }
     }
-
-    // Calculate different timestamp
-    uint diffTime = block.timestamp - preminer.lastTimeReached;
-    uint diffMonthes = diffTime / 2678400;
-
-    // Calculated different monthes
-    if (diffMonthes > preminer.monthes) {
-      diffMonthes = preminer.monthes;
-    }
-
-    // Add pre-mine to balance
-    uint payment = diffMonthes * preminer.monthlyPayment;
-    balances[preminer.account] = safeAdd(balances[preminer.account], payment);
-
-    // Update when preminer asked to premine last time
-    preminer.lastTimeReached = block.timestamp;
   }
 }
