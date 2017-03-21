@@ -6,7 +6,7 @@ const time = require('../helpers/time')
 const errors = require('../helpers/errors')
 const parser = require('../helpers/parser')
 
-contract('Token', () => {
+contract('Token/Premine', () => {
   const creator = web3.eth.accounts[0]
   const toSend = web3.toWei(100, 'ether')
   const preminer = {
@@ -150,6 +150,7 @@ contract('Token', () => {
 
   it('Should doesnt allow new premine release after all premine reached closed', () => {
     const monthlySeconds = 2678500
+    
     return time.move(web3, monthlySeconds).then(() => {
       return Promise.each(preminers, (preminer) => {
         return token.balanceOf(preminer.address).then((balance) => {

@@ -4,7 +4,7 @@ const Token = artifacts.require("../contracts/Token.sol")
 const fs = require('fs')
 const csv = require('csv-parser')
 
-contract('Token', () => {
+contract('Token/LargeAllocation', () => {
   const creator = web3.eth.accounts[0]
   const toSend = web3.toWei(100, 'ether')
 
