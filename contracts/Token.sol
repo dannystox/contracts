@@ -8,6 +8,9 @@ import "./zeppelin/token/StandardToken.sol";
   Added allocation for users who participiated in Wings Campagin.
 */
 contract Token is StandardToken, Ownable {
+  event Allocation(address indexed account, uint amount);
+  event PremineRelease(address indexed account, uint timestamp, uint amount);
+
   /*
     Premine allocations
   */
@@ -75,6 +78,8 @@ contract Token is StandardToken, Ownable {
     if (allocatedAccounts < allocatedAccountsCount) {
       balances[user] = balance;
       allocatedAccounts++;
+
+      Allocation(user, balance);
     } else {
       throw;
     }
@@ -192,6 +197,8 @@ contract Token is StandardToken, Ownable {
 
         balances[preminer.account] = safeAdd(balances[preminer.account], preminer.monthlyPayment);
         preminer.latestAllocation = i;
+
+        PremineRelease(preminer.account, preminer.monthlyPayment, preminer.allocations[i].timestamp);
       } else {
         break;
       }
