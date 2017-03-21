@@ -165,4 +165,14 @@ contract('Token', () => {
     })
   })
 
+  it('Should allow to send user premine to another account', () => {
+    return token.transfer.sendTransaction(preminer.address, preminers[0].total, {
+      from: preminers[0].address
+    }).then(() => {
+      return token.balanceOf(preminer.address)
+    }).then((balance) => {
+      assert.equal(balance.toString(10), preminers[0].total)
+    })
+  })
+
 })
