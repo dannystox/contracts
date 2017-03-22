@@ -26,7 +26,7 @@ contract CrowdPoll is Ownable {
     projectMax = _projectMax;
     bucketStep = _bucketStep;
     for (uint i=0; i<=projectMax; i += bucketStep) {
-      buckets[i] = Bucket({ grades: 0, voters: 0, psi: 0 })
+      buckets[i] = Bucket({ grades: 0, voters: 0, psi: 0 });
     }
 
     logMasks[0] = 0xFFFFFFFF00000000;
@@ -38,12 +38,15 @@ contract CrowdPoll is Ownable {
   }
 
   // Q: sortof ACL, can anybody call those fns, need to be called only from accounts from system!
+  // проверим есть ли у адреса токены или он оттуда
 
   // Stage 1: account posts hashed forecast
-  function post_forecast(uint value, uint bi, uint gi) {
+  function post_forecast(uint value, uint bi, uint32 gi) {
     if (stage != 1 || value > projectMax || (value % bucketStep) != 0 || bi == 0) {
         throw;
     }
+
+    // bi берем внутри, передаем сюда только хэш
 
     address from = msg.sender;
 
@@ -56,11 +59,11 @@ contract CrowdPoll is Ownable {
 
   // Stop voting, start reveal period, called by owner
   function start_reveal_period() onlyOwner() {
-    stage = 2;
+    if (stage == 1) stage = 2;
   }
 
   // Stage 2: accounts reveal their forecasts
-  function reveal_forecast(uint v, uint bi, uint gi) {
+  function reveal_forecast(uint v, uint bi, uint32 gi) {
     if (stage != 2) {
         throw;
     }
@@ -72,7 +75,7 @@ contract CrowdPoll is Ownable {
     }
 
     ++totalVotes;
-    totalGrade += gi;
+    totalGrades += gi;
 
     // how to obtain reference ???
 
@@ -95,7 +98,7 @@ contract CrowdPoll is Ownable {
     }
 
     spamFactor = make_ratio(buckets[0].grades, totalGrades);
-    if (spamFactor >= spamThreshold) {
+    if (spamFactor > spamThreshold) {
       isSpam = true;
       uint votersForSpam = buckets[0].voters;
       if (votersForSpam) {
@@ -135,7 +138,7 @@ contract CrowdPoll is Ownable {
       }
     }
 
-    if (Q3 == NOT_FOUND || st.median == NOT_FOUND || Q1 == NOT_FOUND) {
+    if (Q3 == NOT_FOUND || median == NOT_FOUND || Q1 == NOT_FOUND) {
       // polling failed, no stats
       return;
     }
@@ -153,8 +156,8 @@ contract CrowdPoll is Ownable {
     lsquare = (lsq*lsq) >> 10;
     valueOfPoll = (lsquare*q) >> 10;
 
-    for (uint i=0; i<=projectMax; i += bucketStep) {
-      buckets[i].psi = psi(i);
+    for (uint j=0; j<=projectMax; j += bucketStep) {
+      buckets[j].psi = psi(j);
     }
 
     stage = 4;
@@ -168,7 +171,7 @@ contract CrowdPoll is Ownable {
         throw;
     }
 
-    Vote v = votes[msg.sender];
+    Vote v = revealedVotes[msg.sender]; // спросим макса про копирование
 
     if (v.balance == 0 || v.balance == RESULT_TAKEN) {
       throw;
@@ -188,7 +191,7 @@ contract CrowdPoll is Ownable {
 
         // TODO where project fee is going???
 
-        out.deltaTokens = 0;
+        deltaTokens = 0;
     }
 
     if (deltaR != 0) {
@@ -196,15 +199,20 @@ contract CrowdPoll is Ownable {
     } else {
       deltaG = 0;
     }
+
+    // куда все возвращать если этот вызов есть tx - начислять
   }
 
-  function make_ratio(uint num, uint denom) internal returns(int) {
+  function make_ratio(uint num, uint denom) internal constant returns(int) {
     // 1024 is the base for fixed point ratios
     return (num << 10) / denom;
   }
 
-  function psi(uint value) internal returns(int32) {
-    int gamma, theta, x_Y;
+  function psi(uint value) internal constant returns(int32) {
+    // тоже спросить у макса что с неинициализированными переменными
+    int gamma;
+    int theta;
+    int x_Y;
     if (value <= collected) {
         gamma = gamma1;
         theta = theta1;
@@ -215,7 +223,8 @@ contract CrowdPoll is Ownable {
         x_Y = (value - collected) << 20;
     }
 
-    int m_Y = ((int)median - collected) << 20;
+    int m_Y = median - collected;
+    m_Y <<= 20;
     if (m_Y < 0) m_Y = -m_Y;
 
     // z in fixed pt base 1024, can be > 1024
@@ -231,13 +240,15 @@ contract CrowdPoll is Ownable {
     return Psi;
   }
 
-  function log2(uint64 x) internal returns(uint64 y) {
+  function log2(uint64 x) internal constant returns(uint64 y) {
     y = 0;
     uint64 c = 32;
-    for (int i=0; i<6; ++i, c>>1) {
-      if (x & logMasks[i]) {
+    for (int i=0; i<6; ++i) {
+      if ((x & logMasks[i]) != 0) {
         y += c;
+        x >>= c; // ~~~~~~~~~~~~~ XXX
       }
+      c >>= 1;
     }
     // TODO check that
   }
@@ -246,9 +257,13 @@ contract CrowdPoll is Ownable {
     // TODO
   }
 
+  function delta_g(Vote v, uint g, uint rating, int deltaR) internal returns(int deltaG) {
+
+  }
+
   uint constant NOT_FOUND = 1 << 128;
   uint64 constant RESULT_TAKEN = 0xFFFFFFFFFFFFFFFF;
-  uint64[6] constant logMasks;
+  uint64[6] logMasks;
 
   /* Stage of the process:
     1 -> polling period
@@ -287,6 +302,9 @@ contract CrowdPoll is Ownable {
   // step of discrete bucket levels
   uint bucketStep;
 
+  // value collected by the project
+  uint public collected;
+
   // total tokens in system at the moment of collecting stats
   uint public totalTokensInSystem;
 
@@ -303,7 +321,7 @@ contract CrowdPoll is Ownable {
   uint creatorRefund;
 
   // median of votes distribution
-  uint public median;
+  int public median;
 
   // Quartile coefficient of dispersion [0..1024]
   uint32 public q;
@@ -338,11 +356,11 @@ contract CrowdPoll is Ownable {
   mapping(uint => Bucket) buckets;
 
   // hidden votes passed on stage 1
-  mapping(address => uint) hashedVotes;
+  mapping(address => bytes32) hashedVotes;
 
   struct Vote {
-    uint64 value;
-    uint64 balance;
+    uint value;
+    uint balance;
   }
 
   // votes revealed on stage 2
