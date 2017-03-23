@@ -5,10 +5,19 @@ import "./milestones/BasicMilestones.sol";
 import "./forecasts/BasicForecasting.sol";
 
 contract DAO is DAOAbstraction {
-  function DAO(address _owner, string _name, bytes32 _infoHash, uint _category, bool _underCap) {
+  function DAO(
+      address _owner,
+      string _name,
+      bytes32 _infoHash,
+      uint _category,
+      bool _underCap,
+      uint _reviewHours,
+      address _token) checkReviewHours(_reviewHours) {
     if (_category > 5) {
       throw;
     }
+
+    milestones = new BasicMilestones(msg.sender);
 
     owner = _owner;
     id = sha256(_name);
@@ -17,35 +26,31 @@ contract DAO is DAOAbstraction {
     category = _category;
     timestamp = block.timestamp;
     underCap = _underCap;
+    reviewHours = _reviewHours;
+    token = _token;
   }
 
   /*
     Start DAO process
   */
-  function start() onlyOwner() isStarted(false) {
-    if (milestones == address(0) || forecasting == address(0)) {
+  function start() onlyOwner() isStarted(false) isReadyForStart() {
+    if (forecasting == address(0)) {
       throw;
     }
 
-    if (reviewHours == 0 || forecastHours == 0) {
+    if (forecastHours == 0) {
       throw;
     }
 
     startTimestamp = block.timestamp;
-  }
 
-  /*
-    Set review hours.
-    ToDo: Maximum review hours. And
-  */
-  function setReviewHours(uint _reviewHours) onlyOwner() isStarted(false) checkReviewHours(_reviewHours) {
-    reviewHours = _reviewHours;
+    milestones.setLimitations(startTimestamp, startTimestamp + reviewHours * 1 hours);
   }
 
   /*
     Update project data
   */
-  function update(bytes32 _infoHash, uint _category) onlyOwner() isStarted(true) onlyReview() {
+  function update(bytes32 _infoHash, uint _category) onlyOwner() onlyReview() {
     if (_category > 5) {
       throw;
     }
@@ -59,30 +64,23 @@ contract DAO is DAOAbstraction {
   */
 
   /*
-    Enable milestones
-  */
-  function enableMilestones() onlyOwner() isStarted(false) {
-    milestones = new BasicMilestones();
-  }
-
-  /*
     Add milestone
   */
-  function addMilestone(uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview() {
+  function addMilestone(uint amount, bytes32 data) onlyOwner() onlyReview() {
     milestones.add(amount, data);
   }
 
   /*
     Update milestone
   */
-  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview() {
+  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() onlyReview() {
     milestones.update(index, amount, data);
   }
 
   /*
     Remove milestone
   */
-  function removeMilestone(uint index) onlyOwner() isStarted(true) onlyReview() {
+  function removeMilestone(uint index) onlyOwner() onlyReview() {
     milestones.remove(index);
   }
 
@@ -100,18 +98,11 @@ contract DAO is DAOAbstraction {
     return milestones.milestonesCount();
   }
 
-
-  /*
-    Forecasts
-  */
-  function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false) checkForecastHours(_forecastHours) {
-    forecastHours = _forecastHours;
-  }
-
   /*
     Enable forecasts
   */
-  function enableForecasts() onlyOwner() isStarted(false) {
+  function enableForecasts(uint _hours) onlyOwner() isStarted(false) checkForecastHours(_hours) {
+    forecastHours = _hours;
     forecasting = new BasicForecasting();
   }
 

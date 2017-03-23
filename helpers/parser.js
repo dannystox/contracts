@@ -22,9 +22,8 @@ const projectBaseFields = {
 }
 
 const milestoneFields = {
-  0: 'type',
-  1: 'amount',
-  2: 'items'
+  0: 'amount',
+  1: 'items'
 }
 
 const forecastFields = {

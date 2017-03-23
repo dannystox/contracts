@@ -30,6 +30,8 @@ contract DAOAbstraction is Ownable {
   string public name; // name of project
   bytes32 public infoHash; // information hash of project
 
+  address token; // token contract address
+
   uint public category; // category of project
 
   uint public timestamp; // timestamp when project created
@@ -43,9 +45,8 @@ contract DAOAbstraction is Ownable {
   /*
     Contracts
   */
-  MilestonesAbstraction milestones;
-  ForecastingAbstraction forecasting;
-  //address crowdsale;
+  MilestonesAbstraction public milestones;
+  ForecastingAbstraction public forecasting;
 
   modifier isStarted(bool _value) {
     if (_value == true) {
@@ -64,7 +65,7 @@ contract DAOAbstraction is Ownable {
   }
 
   modifier onlyReview() {
-    if (block.timestamp < (startTimestamp + (reviewHours * 1 hours))) {
+    if (startTimestamp == 0 || (block.timestamp < (startTimestamp + (reviewHours * 1 hours)))) {
       _;
     } else {
       throw;
@@ -80,7 +81,7 @@ contract DAOAbstraction is Ownable {
   }
 
   modifier checkReviewHours(uint _hours) {
-    if (_hours < 1 || _hours > 36) {
+    if (_hours < 1 || _hours > 504) {
       throw;
     }
 
@@ -88,7 +89,15 @@ contract DAOAbstraction is Ownable {
   }
 
   modifier checkForecastHours(uint _hours) {
-    if (_hours < 1 || _hours > 730) {
+    if (_hours < 120 || _hours > 720) {
+      throw;
+    }
+
+    _;
+  }
+
+  modifier isReadyForStart() {
+    if (forecasting == address(0) || forecastHours == 0) {
       throw;
     }
 
@@ -96,58 +105,14 @@ contract DAOAbstraction is Ownable {
   }
 
   /*
-    Set review hours
-  */
-  function setReviewHours(uint _reviewHours) onlyOwner() isStarted(false);
-
-  /*
-    Set forecast hours
-  */
-  function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false);
-
-  /*
     Update project data
   */
-  function update(bytes32 _infoHash, uint _category) onlyOwner() isStarted(true) onlyReview();
+  function update(bytes32 _infoHash, uint _category) onlyOwner() onlyReview();
 
   /*
     Start DAO process
   */
   function start() onlyOwner() isStarted(false);
-
-  /*
-    Milestones
-  */
-
-  /*
-    Enable milestones
-  */
-  function enableMilestones() onlyOwner() isStarted(false);
-
-  /*
-    Add milestone
-  */
-  function addMilestone(uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview();
-
-  /*
-    Update milestone
-  */
-  function updateMilestone(uint index, uint amount, bytes32 data) onlyOwner() isStarted(true) onlyReview();
-
-  /*
-    Remove milestone
-  */
-  function removeMilestone(uint index) onlyOwner() isStarted(true) onlyReview();
-
-  /*
-    Get milestone
-  */
-  function getMilestone(uint index) constant returns (uint _amount, bytes32 _items, bool _completed);
-
-  /*
-    Get milestones count
-  */
-  function getMilestonesCount() constant returns (uint _count);
 
 
   /*
@@ -157,7 +122,7 @@ contract DAOAbstraction is Ownable {
   /*
     Enable forecasts
   */
-  function enableForecasts() onlyOwner() isStarted(false);
+  function enableForecasts(uint _hours) onlyOwner() isStarted(false) checkForecastHours(_hours);
 
   /*
     Add forecast

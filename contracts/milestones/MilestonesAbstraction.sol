@@ -6,6 +6,14 @@ pragma solidity ^0.4.2;
 import "../zeppelin/Ownable.sol";
 
 contract MilestonesAbstraction is Ownable {
+    modifier onlyParent() {
+      if (msg.sender == parent) {
+        _;
+      } else {
+        throw;
+      }
+    }
+
     /*
       Milestone structure
     */
@@ -16,6 +24,22 @@ contract MilestonesAbstraction is Ownable {
       uint amount;
       bytes32 items;
       bool completed;
+    }
+
+    modifier beforeTime {
+      if (startTimestamp == 0 && endTimestamp == 0) {
+        _;
+      } else {
+        throw;
+      }
+    }
+
+    modifier inTime {
+      if (startTimestamp == 0 || (block.timestamp > (startTimestamp) && block.timestamp < endTimestamp)) {
+        _;
+      } else {
+        throw;
+      }
     }
 
     /*
@@ -29,24 +53,44 @@ contract MilestonesAbstraction is Ownable {
     uint public milestonesCount;
 
     /*
+      When we allow to add milestones
+    */
+    uint public startTimestamp;
+
+    /*
+      When we doesnt allow to add milestones
+    */
+    uint public endTimestamp;
+
+    /*
+      Address of parent contract or parent creator
+    */
+    address public parent;
+
+    /*
       Max count of milestones
     */
     uint public maxCount;
 
     /*
+      Set time when it's possible to start adding milestones and when it's not possible.
+    */
+    function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyParent() beforeTime();
+
+    /*
       Adding milestones
     */
-    function add(uint amount, bytes32 items) onlyOwner();
+    function add(uint amount, bytes32 items) onlyOwner() inTime();
 
     /*
       Updating milestones
     */
-    function update(uint index, uint amount, bytes32 items) onlyOwner();
+    function update(uint index, uint amount, bytes32 items) onlyOwner() inTime();
 
     /*
       Removing milestones
     */
-    function remove(uint index) onlyOwner();
+    function remove(uint index) onlyOwner() inTime();
 
     /*
       Completing milestone.

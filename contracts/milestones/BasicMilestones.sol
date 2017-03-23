@@ -6,14 +6,24 @@ pragma solidity ^0.4.2;
 import "./MilestonesAbstraction.sol";
 
 contract BasicMilestones is MilestonesAbstraction {
-  function BasicMilestones() {
+  function BasicMilestones(address _owner) {
+    owner = _owner;
+    parent = msg.sender;
     maxCount = 10;
+  }
+
+  /*
+    Set time when it's possible to start adding milestones and when it's not possible.
+  */
+  function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyOwner() beforeTime() {
+    startTimestamp = _startTimestamp;
+    endTimestamp = _endTimestamp;
   }
 
   /*
     Adding milestones
   */
-  function add(uint amount, bytes32 items) onlyOwner() {
+  function add(uint amount, bytes32 items) onlyOwner() inTime() {
     if (milestonesCount == maxCount || amount < 1) {
       throw;
     }
@@ -25,7 +35,7 @@ contract BasicMilestones is MilestonesAbstraction {
   /*
     Updating milestones
   */
-  function update(uint index, uint amount, bytes32 items) onlyOwner() {
+  function update(uint index, uint amount, bytes32 items) onlyOwner() inTime() {
     if (amount < 1) {
       throw;
     }
@@ -39,7 +49,7 @@ contract BasicMilestones is MilestonesAbstraction {
   /*
     Removing milestones
   */
-  function remove(uint index) onlyOwner() {
+  function remove(uint index) onlyOwner() inTime() {
     if (index > milestonesCount) {
       throw;
     }
@@ -73,7 +83,6 @@ contract BasicMilestones is MilestonesAbstraction {
 
     return (milestone.amount, milestone.items, milestone.completed);
   }
-
 
   /*
     Get milestones sum
