@@ -208,8 +208,8 @@ contract CrowdPoll is Ownable {
     }
 
     int lsq = make_ratio(tokensVoted, totalTokensInSystem);
-    lsquare = int32((lsq*lsq) >> 10);
-    valueOfPoll = (lsquare*q) >> 10;
+    lsquare = int32((lsq*lsq) / 1000);
+    valueOfPoll = (lsquare*q) / 1000;
 
     for (int128 j=0; j<=projectMax; j += bucketStep) {
       buckets[j].psi = psi(j);
@@ -218,7 +218,7 @@ contract CrowdPoll is Ownable {
     stage = Stage.PollingSucceeded;
   }
 
-  function take_result(uint rating, uint g) returns(int deltaTokens, int deltaR, int deltaG) {
+  function take_result(int32 rating, uint8 g) returns(int deltaTokens, int32 deltaR, int8 deltaG) {
     // TODO what to do if stage == 3?
 
     if (stage != Stage.PollingSucceeded) {
@@ -250,7 +250,7 @@ contract CrowdPoll is Ownable {
     }
 
     if (deltaR != 0) {
-      deltaG = delta_g(v, g, rating, deltaR);
+      deltaG = delta_g(g, rating, deltaR);
     } else {
       deltaG = 0;
     }
@@ -260,11 +260,15 @@ contract CrowdPoll is Ownable {
 
   function make_ratio(int128 num, int128 denom) internal constant returns(int32) {
     // 1024 is the base for fixed point ratios
-    return int32((num << 10) / denom);
+    return int32((num * 1000) / denom);
   }
 
   function psi(int128 value) internal constant returns(int32) {
     // The default for function parameters (including return parameters) is memory, the default for local variables is storage
+
+    // "The expression x << y is equivalent to x * 2**y
+    // and x >> y is equivalent to x / 2**y"
+    // Это что же, у них умножать выгодне чем сдвигать? - в булошную на такси
 
     // тоже спросить у макса что с неинициализированными переменными
     int gamma;
@@ -273,22 +277,22 @@ contract CrowdPoll is Ownable {
     if (value <= collected) {
         gamma = gamma1;
         theta = theta1;
-        x_Y = (collected - value) << 20;
+        x_Y = (collected - value) * 1000000;
     } else {
         gamma = gamma2;
         theta = theta2;
-        x_Y = (value - collected) << 20;
+        x_Y = (value - collected) * 1000000;
     }
 
     int m_Y = median - collected;
-    m_Y <<= 20;
+    m_Y *= 1000000;
     if (m_Y < 0) m_Y = -m_Y;
 
     // z in fixed pt base 1024, can be > 1024
-    int z = (x_Y / gamma) >> 20;
+    int z = (x_Y / gamma) / 1000000;
     z = z / (m_Y + (theta * q));
 
-    int Psi = (1024 - (z*z) >> 10);
+    int Psi = (1024 - (z*z) / 1000);
 
     if (c != 0 && Psi < -c) {
         Psi = -c;
@@ -297,25 +301,59 @@ contract CrowdPoll is Ownable {
     return int32(Psi);
   }
 
-  function log2(int128 x) internal constant returns(int128 y) {
+  function log2(int x) internal constant returns(int y) {
     y = 0;
-    int128 c = 64;
+    int c = 64;
     for (uint8 i=0; i<7; ++i) {
       if (x > logMasks[i]) {
         y += c;
         x >>= c;
       }
-      c >>= 1;
+      c /= 2;
     }
     // TODO check that
   }
 
-  function delta_r(Vote v, uint rating) internal returns(int deltaR) {
-    // TODO
+  function delta_r(Vote v, int32 rating) internal returns(int32) {
+    int r = v.balance;
+    r *= K;
+    r *= 1000;
+    r /= totalTokensInSystem;
+    if (r > 2000) {
+      r = log2(r/1000) * 1000;
+    } else {
+      r /= 2;
+    }
+    r *= buckets[v.value].psi;
+    r *= valueOfPoll;
+    return int32(r / 1000);
   }
 
-  function delta_g(Vote v, uint g, uint rating, int deltaR) internal returns(int deltaG) {
-
+  function delta_g(uint8 g, int32 rating, int32 deltaR) internal returns(int8) {
+    if (g > 8) {
+      throw;
+    }
+    int32 newRating = rating + deltaR;
+    if (deltaR > 0) {
+      for (uint8 gi = g; gi < 8; ++gi) {
+        if (ratingLevels[gi] > newRating) {
+          return int8(gi) - int8(g);
+        } else if (ratingLevels[gi] == 0) {
+          return int8(gi) - 1 - int8(g);
+        }
+      }
+      return 8;
+    } else {
+      if (newRating < ratingLevels[0]) {
+        return -(int8(g));
+      }
+      for (uint8 gj = g; gj != 0; --gj) {
+        if (newRating > ratingLevels[gj]) {
+          return int8(gj) - int8(g);
+        }
+      }
+      return 1;
+    }
   }
 
 // Project parameters
@@ -341,6 +379,9 @@ contract CrowdPoll is Ownable {
   // rating levels a[i], (8 is max ??? to fit into 1 slot)
   int32[8] ratingLevels; // mapping vs array ????
 
+  // 'R' - max forecast rating
+  int32 maxRating;
+
   // 's0' - spam threshold [0..1024]
   int32 spamThreshold;
 
@@ -351,9 +392,6 @@ contract CrowdPoll is Ownable {
   int32 theta2;
   int32 c;
   int32 K;
-
-  // 'R' - max forecast rating
-  int32 maxRating;
 
 // Stats
   // median of values (>0) distribution weighted by grades
@@ -389,7 +427,7 @@ contract CrowdPoll is Ownable {
   // reward to those who reported spam
   int128 rewardForSpamVote;
 
-  // refund to creator to avoid losing tokens
+  // refund to creator to avoid losing tokens (remainder of division)
   int128 creatorRefund;
 
   struct Bucket {
