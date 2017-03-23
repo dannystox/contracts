@@ -16,6 +16,8 @@ contract('Token/Premine', () => {
     "duration": 26
   }
 
+  const oneAcc = '0x8f9318230e6c4d416a0ad9bb9ce105bb74170c93'
+
   let preminers = []
 
   const duration = 26
@@ -42,7 +44,7 @@ contract('Token/Premine', () => {
       "total": premine.total
     }]
 
-    return Token.new(0, {
+    return Token.new(1, {
       from: creator
     }).then(_token => {
       token = _token
@@ -54,8 +56,8 @@ contract('Token/Premine', () => {
   })
 
   it('Allocation should be equal \'true\'', () => {
-    return token.allocation.call().then((allocation) => {
-      assert.equal(allocation, true)
+    return token.accountsToAllocate.call().then((allocation) => {
+      assert.equal(allocation.toNumber(), 1)
     })
   })
 
@@ -83,23 +85,17 @@ contract('Token/Premine', () => {
     })
   })
 
-  it('Should allow to close allocation period', () => {
-    return token.completeAllocation.sendTransaction({
+  it('Should allocate one account', () => {
+    return token.allocate.sendTransaction(oneAcc, 0, {
       from: creator
-    }).then(() => {
-      return token.allocation.call()
-    }).then((allocation) => {
-      assert.equal(allocation, false)
     })
   })
 
   it('Shouldn\'t allow to preminer after allocation closed', () => {
     return token.addPreminer.sendTransaction(preminer.address, preminer.balance, preminer.payment, {
       from: creator
-    }).then(() => {
-      return token.balanceOf.call(preminer.address)
-    }).then(balance => {
-      assert.equal(balance.toString(10), '0')
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
     })
   })
 
@@ -150,7 +146,7 @@ contract('Token/Premine', () => {
 
   it('Should doesnt allow new premine release after all premine reached closed', () => {
     const monthlySeconds = 2678500
-    
+
     return time.move(web3, monthlySeconds).then(() => {
       return Promise.each(preminers, (preminer) => {
         return token.balanceOf(preminer.address).then((balance) => {

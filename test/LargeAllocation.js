@@ -10,8 +10,10 @@ contract('Token/LargeAllocation', () => {
 
   let token
 
+  const accountsCount = 10000
+
   before('Deploy Wings Token', () => {
-    return Token.new(10000, {
+    return Token.new(accountsCount, {
       from: creator
     }).then(_token => {
       token = _token
@@ -23,8 +25,8 @@ contract('Token/LargeAllocation', () => {
   })
 
   it('Allocation should be equal \'true\'', () => {
-    return token.allocation.call().then((allocation) => {
-      assert.equal(allocation, true)
+    return token.accountsToAllocate.call().then((allocation) => {
+      assert.equal(allocation.toNumber(), accountsCount)
     })
   })
 

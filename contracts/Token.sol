@@ -50,24 +50,25 @@ contract Token is StandardToken, Ownable {
   /*
     How many accounts allocated?
   */
-  uint public allocatedAccountsCount;
-  uint public allocatedAccounts;
+  uint public accountsToAllocate;
 
   /*
-    Modifier for checking is allocation completed
+    Modifier for checking is allocation completed.
+    Maybe we should add here pre-mine accounts too.
   */
   modifier whenAllocation(bool value) {
-    if (allocation == value) {
+    if ((accountsToAllocate > 0) == value) {
       _;
+    } else {
+      throw;
     }
   }
 
-  function Token(uint _allocatedAccountsCount) {
+  function Token(uint _accountsToAllocate) {
     totalSupply = 100000000000000000000000000;
     owner = msg.sender;
-    allocation = true;
 
-    allocatedAccountsCount = _allocatedAccountsCount;
+    accountsToAllocate = _accountsToAllocate;
   }
 
   /*
@@ -75,26 +76,10 @@ contract Token is StandardToken, Ownable {
     Only owner and only while allocation active.
   */
   function allocate(address user, uint balance) onlyOwner() whenAllocation(true) {
-    if (allocatedAccounts < allocatedAccountsCount) {
-      balances[user] = balance;
-      allocatedAccounts++;
+    balances[user] = balance;
 
-      Allocation(user, balance);
-    } else {
-      throw;
-    }
-  }
-
-  /*
-    Compliting allocation.
-    Only for owner and while allocation active.
-  */
-  function completeAllocation() onlyOwner() whenAllocation(true) {
-    if (allocatedAccounts != allocatedAccountsCount) {
-      throw;
-    }
-
-    allocation = false;
+    accountsToAllocate--;
+    Allocation(user, balance);
   }
 
   /*
