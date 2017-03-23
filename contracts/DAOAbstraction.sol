@@ -1,7 +1,6 @@
 pragma solidity ^0.4.2;
 
 import "./zeppelin/Ownable.sol";
-import "./comments/CommentsAbstraction.sol";
 import "./milestones/MilestonesAbstraction.sol";
 import "./forecasts/ForecastingAbstraction.sol";
 
@@ -27,7 +26,6 @@ contract DAOAbstraction is Ownable {
     AfterFunding
   }
 
-  address public creator; // creator of the projects
   bytes32 public id; // id of project
   string public name; // name of project
   bytes32 public infoHash; // information hash of project
@@ -45,7 +43,6 @@ contract DAOAbstraction is Ownable {
   /*
     Contracts
   */
-  CommentsAbstraction comments;
   MilestonesAbstraction milestones;
   ForecastingAbstraction forecasting;
   //address crowdsale;
@@ -60,28 +57,48 @@ contract DAOAbstraction is Ownable {
     } else {
       if (startTimestamp == 0) {
         _;
+      } else {
+        throw;
       }
-
-      throw;
     }
   }
 
   modifier onlyReview() {
     if (block.timestamp < (startTimestamp + (reviewHours * 1 hours))) {
       _;
+    } else {
+      throw;
     }
   }
 
   modifier onlyForecasting() {
     if (block.timestamp < (startTimestamp + (reviewHours + forecastHours) * 1 hours)) {
       _;
+    } else {
+      throw;
     }
+  }
+
+  modifier checkReviewHours(uint _hours) {
+    if (_hours < 1 || _hours > 36) {
+      throw;
+    }
+
+    _;
+  }
+
+  modifier checkForecastHours(uint _hours) {
+    if (_hours < 1 || _hours > 730) {
+      throw;
+    }
+
+    _;
   }
 
   /*
     Set review hours
   */
-  function setReviewHours(uint _reviewHours) onlyOwner();
+  function setReviewHours(uint _reviewHours) onlyOwner() isStarted(false);
 
   /*
     Set forecast hours
@@ -97,30 +114,6 @@ contract DAOAbstraction is Ownable {
     Start DAO process
   */
   function start() onlyOwner() isStarted(false);
-
-  /*
-    Comments
-  */
-
-  /*
-    Enable comments
-  */
-  function enableComments() onlyOwner() isStarted(false);
-
-  /*
-    Add comment
-  */
-  function addComment(bytes32 _data) isStarted(true);
-
-  /*
-    Get comments count for specific project
-  */
-  function getCommentsCount() constant returns (uint _count);
-
-  /*
-    Get speific comment by project id and index of comment
-  */
-  function getComment(uint index) constant returns (address _creator, uint _timestamp, bytes32 _data);
 
   /*
     Milestones

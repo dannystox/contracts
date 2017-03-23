@@ -1,7 +1,6 @@
 pragma solidity ^0.4.2;
 
 import "./DAOAbstraction.sol";
-import "./comments/BasicComments.sol";
 import "./milestones/BasicMilestones.sol";
 import "./forecasts/BasicForecasting.sol";
 
@@ -16,7 +15,6 @@ contract DAO is DAOAbstraction {
     name = _name;
     infoHash = _infoHash;
     category = _category;
-    creator = msg.sender;
     timestamp = block.timestamp;
     underCap = _underCap;
   }
@@ -25,25 +23,22 @@ contract DAO is DAOAbstraction {
     Start DAO process
   */
   function start() onlyOwner() isStarted(false) {
-    if (comments == address(0) || milestones == address(0) || forecasting == address(0)) {
+    if (milestones == address(0) || forecasting == address(0)) {
       throw;
     }
 
     if (reviewHours == 0 || forecastHours == 0) {
-
-    }
-
-    startTimestamp = block.number;
-  }
-
-  /*
-    Set review hours
-  */
-  function setReviewHours(uint _reviewHours) onlyOwner() {
-    if (reviewHours > 0 || _reviewHours < 1) {
       throw;
     }
 
+    startTimestamp = block.timestamp;
+  }
+
+  /*
+    Set review hours.
+    ToDo: Maximum review hours. And
+  */
+  function setReviewHours(uint _reviewHours) onlyOwner() isStarted(false) checkReviewHours(_reviewHours) {
     reviewHours = _reviewHours;
   }
 
@@ -57,38 +52,6 @@ contract DAO is DAOAbstraction {
 
     infoHash = _infoHash;
     category = _category;
-  }
-
-  /*
-    Comments
-  */
-
-  /*
-    Enable comments contract
-  */
-  function enableComments() onlyOwner() isStarted(false) {
-    comments = new BasicComments();
-  }
-
-  /*
-    Add comment
-  */
-  function addComment(bytes32 _data) isStarted(true) {
-    comments.addComment(msg.sender, _data);
-  }
-
-  /*
-    Get comments count for specific project
-  */
-  function getCommentsCount() constant returns (uint _count) {
-    comments.getCommentsCount();
-  }
-
-  /*
-    Get speific comment by project id and index of comment
-  */
-  function getComment(uint index) constant returns (address _creator, uint _timestamp, bytes32 _data) {
-    return comments.getComment(index);
   }
 
   /*
@@ -141,7 +104,7 @@ contract DAO is DAOAbstraction {
   /*
     Forecasts
   */
-  function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false) {
+  function setForecastHours(uint _forecastHours) onlyOwner() isStarted(false) checkForecastHours(_forecastHours) {
     forecastHours = _forecastHours;
   }
 
