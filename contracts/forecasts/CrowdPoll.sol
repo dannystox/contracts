@@ -259,7 +259,7 @@ contract CrowdPoll is Ownable {
   }
 
   function make_ratio(int128 num, int128 denom) internal constant returns(int32) {
-    // 1024 is the base for fixed point ratios
+    // 1000 is the base for fixed point ratios
     return int32((num * 1000) / denom);
   }
 
@@ -288,11 +288,11 @@ contract CrowdPoll is Ownable {
     m_Y *= 1000000;
     if (m_Y < 0) m_Y = -m_Y;
 
-    // z in fixed pt base 1024, can be > 1024
+    // z in fixed pt base 1000, can be > 1000
     int z = (x_Y / gamma) / 1000000;
     z = z / (m_Y + (theta * q));
 
-    int Psi = (1024 - (z*z) / 1000);
+    int Psi = (1000 - (z*z) / 1000);
 
     if (c != 0 && Psi < -c) {
         Psi = -c;
@@ -382,10 +382,10 @@ contract CrowdPoll is Ownable {
   // 'R' - max forecast rating
   int32 maxRating;
 
-  // 's0' - spam threshold [0..1024]
+  // 's0' - spam threshold [0..1000]
   int32 spamThreshold;
 
-  // gamma, theta, c, K parameters for 'psi' and deltas functions (*1024)
+  // gamma, theta, c, K parameters for 'psi' and deltas functions (*1000)
   int32 gamma1;
   int32 theta1;
   int32 gamma2;
@@ -397,13 +397,13 @@ contract CrowdPoll is Ownable {
   // median of values (>0) distribution weighted by grades
   int128 median;
 
-  // Spam factor s0 of the poll [0..1024]
+  // Spam factor s0 of the poll [0..1000]
   int32 spamFactor;
 
-  // Quartile coefficient of dispersion [0..1024]
+  // Quartile coefficient of dispersion [0..1000]
   int32 q;
 
-  // squared 'l' in value of the poll formula [0..1024]
+  // squared 'l' in value of the poll formula [0..1000]
   int32 lsquare;
 
   // Value of the poll
@@ -437,7 +437,7 @@ contract CrowdPoll is Ownable {
     // voters distributed per level, w/o grade weighting
     int64 voters;
 
-    // Psi (formula 5) values [-c..1024]
+    // Psi (formula 5) values [-c..1000]
     int32 psi;
   }
 
