@@ -12,14 +12,6 @@ contract Token is StandardToken, Ownable {
   event PremineRelease(address indexed account, uint timestamp, uint amount);
 
   /*
-    Premine allocations
-  */
-  struct PremineAllocation {
-    uint timestamp;
-    bool done;
-  }
-
-  /*
     Premine scturcture
   */
   struct Preminer {
@@ -28,7 +20,7 @@ contract Token is StandardToken, Ownable {
     uint latestAllocation;
 
     uint allocationsCount;
-    mapping(uint => PremineAllocation) allocations;
+    mapping(uint => uint) allocations;
   }
 
   /*
@@ -130,6 +122,7 @@ contract Token is StandardToken, Ownable {
 
     balances[preminer] = safeAdd(balances[preminer], initialBalance);
     preminers[preminer] = premine;
+    accountsToAllocate--;
   }
 
   /*
@@ -138,25 +131,20 @@ contract Token is StandardToken, Ownable {
   function addPremineAllocation(address _preminer, uint _time) onlyOwner() whenAllocation(true) {
     var preminer = preminers[_preminer];
 
-    if (preminer.account == address(0)) {
+    if (preminer.account == address(0) || _time == 0) {
       throw;
     }
-
-    var allocation = PremineAllocation(
-        _time,
-        false
-      );
 
     if (preminer.allocationsCount > 0) {
       var previousAllocation = preminer.allocations[preminer.allocationsCount-1];
 
-      if (previousAllocation.timestamp > _time) {
+      if (previousAllocation > _time) {
         throw;
       }
 
-      preminer.allocations[preminer.allocationsCount++] = allocation;
+      preminer.allocations[preminer.allocationsCount++] = _time;
     } else {
-      preminer.allocations[preminer.allocationsCount++] = allocation;
+      preminer.allocations[preminer.allocationsCount++] = _time;
     }
   }
 
@@ -173,17 +161,16 @@ contract Token is StandardToken, Ownable {
     }
 
     for (var i = preminer.latestAllocation; i < preminer.allocationsCount; i++) {
-      if (preminer.allocations[i].timestamp < block.timestamp) {
-        if (preminer.allocations[i].done == true) {
+      if (preminer.allocations[i] < block.timestamp) {
+        if (preminer.allocations[i] == 0) {
           continue;
         }
-
-        preminer.allocations[i].done = true;
 
         balances[preminer.account] = safeAdd(balances[preminer.account], preminer.monthlyPayment);
         preminer.latestAllocation = i;
 
-        PremineRelease(preminer.account, preminer.monthlyPayment, preminer.allocations[i].timestamp);
+        PremineRelease(preminer.account, preminer.monthlyPayment, preminer.allocations[i]);
+        preminer.allocations[i] = 0;
       } else {
         break;
       }

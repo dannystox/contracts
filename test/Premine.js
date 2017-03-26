@@ -44,7 +44,7 @@ contract('Token/Premine', () => {
       "total": premine.total
     }]
 
-    return Token.new(1, {
+    return Token.new(preminers.length+1, {
       from: creator
     }).then(_token => {
       token = _token
@@ -57,7 +57,7 @@ contract('Token/Premine', () => {
 
   it('Allocation should be equal \'true\'', () => {
     return token.accountsToAllocate.call().then((allocation) => {
-      assert.equal(allocation.toNumber(), 1)
+      assert.equal(allocation.toNumber(), preminers.length+1)
     })
   })
 
@@ -85,7 +85,7 @@ contract('Token/Premine', () => {
     })
   })
 
-  it('Should allocate one account', () => {
+  it('Should complete allocation', () => {
     return token.allocate.sendTransaction(oneAcc, 0, {
       from: creator
     })
