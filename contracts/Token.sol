@@ -33,6 +33,7 @@ contract Token is StandardToken, Ownable {
   */
   string public name = "WINGS";
   string public symbol = "WINGS";
+  uint public decimals = 8;
 
   /*
     Is allocation completed?
