@@ -29,10 +29,12 @@ contract Token is StandardToken, Ownable {
   mapping(address => Preminer) preminers;
 
   /*
-    Token Name & Token Symbol
+    Token Name & Token Symbol & Decimals
   */
-  string public name = "WINGS";
-  string public symbol = "WINGS";
+  string public name = "TWINGS";
+  string public symbol = "TWINGS";
+  uint public decimals = 18;
+
 
   /*
     Is allocation completed?
