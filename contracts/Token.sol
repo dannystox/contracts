@@ -35,7 +35,6 @@ contract Token is StandardToken, Ownable {
   string public symbol = "TWINGS";
   uint public decimals = 18;
 
-
   /*
     Is allocation completed?
   */
