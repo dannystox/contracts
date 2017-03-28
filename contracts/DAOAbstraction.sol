@@ -30,7 +30,7 @@ contract DAOAbstraction is Ownable {
   string public name; // name of project
   bytes32 public infoHash; // information hash of project
 
-  address token; // token contract address
+  address public token; // token contract address
 
   uint public category; // category of project
 
@@ -96,8 +96,8 @@ contract DAOAbstraction is Ownable {
     _;
   }
 
-  modifier isReadyForStart() {
-    if (forecasting == address(0) || forecastHours == 0) {
+  modifier checkCategory(uint _category) {
+    if (_category > 5) {
       throw;
     }
 
@@ -112,37 +112,5 @@ contract DAOAbstraction is Ownable {
   /*
     Start DAO process
   */
-  function start() onlyOwner() isStarted(false);
-
-
-  /*
-    Forecasts
-  */
-
-  /*
-    Enable forecasts
-  */
-  function enableForecasts(uint _hours) onlyOwner() isStarted(false) checkForecastHours(_hours);
-
-  /*
-    Add forecast
-  */
-  function addForecast(uint _amount, bytes32 _message) onlyOwner() isStarted(true) onlyForecasting();
-
-  /*
-    Get user forecast
-  */
-  function getUserForecast(address _user) constant returns (uint _amount, uint _timestamp, bytes32 _message);
-
-  /*
-    Get forecast
-  */
-  function getForecast(uint _index) constant returns (uint _amount, uint _timestamp, bytes32 _message);
-
-  /*
-    Get forecasts count
-  */
-  function getForecastsCount() constant returns (uint _count);
-
-
+  function start(uint _forecastHours, uint _rewardPercent) onlyOwner() isStarted(false) checkForecastHours(_forecastHours);
 }
