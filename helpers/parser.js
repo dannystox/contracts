@@ -28,10 +28,15 @@ const milestoneFields = {
 
 const forecastFields = {
   0: 'creator',
-  1: 'projectId',
-  2: 'raiting',
-  3: 'timestamp',
-  4: 'message'
+  1: 'amount',
+  2: 'timestamp',
+  3: 'message'
+}
+
+const forecastUserFields = {
+  0: 'amount',
+  1: 'timestamp',
+  2: 'message'
 }
 
 const commentFields = {
@@ -63,12 +68,14 @@ const parseMilestone = (arr) => internalParser(arr, milestoneFields)
 const parseForecast = (arr) => internalParser(arr, forecastFields)
 const parseComment = (arr) => internalParser(arr, commentFields)
 const parsePreminer = (arr) => internalParser(arr, preminerFields)
+const parseUserForecast = (arr) => internalParser(arr, forecastUserFields)
 
 module.exports = {
   parseProject,
   parseBaseProject,
   parseMilestone,
   parseForecast,
+  parseUserForecast,
   parseComment,
   parsePreminer
 }
