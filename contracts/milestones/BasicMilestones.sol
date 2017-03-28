@@ -6,10 +6,11 @@ pragma solidity ^0.4.2;
 import "./MilestonesAbstraction.sol";
 
 contract BasicMilestones is MilestonesAbstraction {
-  function BasicMilestones(address _owner) {
+  function BasicMilestones(address _owner, bool _cap) {
     owner = _owner;
     parent = msg.sender;
     maxCount = 10;
+    cap = _cap;
   }
 
   /*
@@ -25,6 +26,10 @@ contract BasicMilestones is MilestonesAbstraction {
   */
   function add(uint amount, bytes32 items) onlyOwner() inTime() {
     if (milestonesCount == maxCount || amount < 1) {
+      throw;
+    }
+
+    if (amount == 0) {
       throw;
     }
 
@@ -50,6 +55,10 @@ contract BasicMilestones is MilestonesAbstraction {
     Removing milestones
   */
   function remove(uint index) onlyOwner() inTime() {
+    if (cap && milestonesCount == 1) {
+      throw;
+    }
+
     if (index > milestonesCount) {
       throw;
     }

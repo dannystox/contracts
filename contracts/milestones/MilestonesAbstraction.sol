@@ -73,6 +73,11 @@ contract MilestonesAbstraction is Ownable {
     uint public maxCount;
 
     /*
+      Is we under cap
+    */
+    bool public cap;
+
+    /*
       Set time when it's possible to start adding milestones and when it's not possible.
     */
     function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyParent() beforeTime();
