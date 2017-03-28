@@ -58,6 +58,10 @@ contract Token is StandardToken, Ownable {
   }
 
   function Token(uint _accountsToAllocate) {
+    /*
+      Maybe we should calculate it in allocation and pre-mine.
+      I mean total supply
+    */
     totalSupply = 100000000000000000000000000;
     owner = msg.sender;
 
