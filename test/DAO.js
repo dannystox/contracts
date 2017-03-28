@@ -3,12 +3,14 @@ const Promise = require('bluebird')
 const DAO = artifacts.require("../contracts/DAO.sol")
 const Token = artifacts.require("../contracts/Token.sol")
 const Milestones = artifacts.require("../contracts/milestones/BasicMilestones.sol")
+const Forecasting = artifacts.require("../contracts/forecasts/BasicForecasting.sol")
 const crypto = require('crypto')
 const Chance = require('chance')
 const parser = require('../helpers/parser')
 const arrayHelper = require('../helpers/arrays')
 const errors = require('../helpers/errors')
 const time = require('../helpers/time')
+const miner = require('../helpers/miner')
 
 contract('DAO', () => {
   const creator = web3.eth.accounts[0]
@@ -16,7 +18,7 @@ contract('DAO', () => {
   let chance = new Chance()
   let dao, daoInfo
 
-  let token, milestones
+  let token, milestones, forecasting
 
   before('Deploy Wings DAO', () => {
     daoInfo = {
@@ -27,10 +29,10 @@ contract('DAO', () => {
       underCap: false,
       reviewHours: chance.integer({min: 1, max: 504 }),
       forecastHours: chance.integer({min: 120, max: 720 }),
-      milestones: []
+      rewardPercent: chance.integer({min: 1, max: 100000000 }),
+      milestones: [],
+      forecasts: []
     }
-
-
 
     for (let i = 0; i < 10; i++) {
       const milestone = {
@@ -57,12 +59,6 @@ contract('DAO', () => {
     })
   })
 
-
-  it('Should create & set forecast contract', () => {
-    return dao.enableForecasts.sendTransaction(daoInfo.forecastHours, {
-      from: creator
-    })
-  })
 
   it('Should allow to update DAO info before start', () => {
     daoInfo.infoHash = '0x' + crypto.randomBytes(32).toString('hex')
@@ -164,7 +160,7 @@ contract('DAO', () => {
   })
 
   it('Should allow to start DAO', () => {
-    return dao.start.sendTransaction({
+    return dao.start.sendTransaction(daoInfo.forecastHours, daoInfo.rewardPercent, {
       from: creator
     })
   })
@@ -233,12 +229,6 @@ contract('DAO', () => {
     })
   })
 
-  it.skip('Should move time to forecast period', () => {
-    const secondsToMove = (daoInfo.reviewHours * 3600) + 1
-
-    return time.move(web3, secondsToMove)
-  })
-
   it('Should doesnt allow  update to modificate, or update, or remove milestone', () => {
     const i = 5
     const newMilestone = {
@@ -252,14 +242,125 @@ contract('DAO', () => {
       return milestones.update(5, newMilestone.amount, newMilestone.items)
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
+
       return milestones.add(newMilestone.amount, newMilestone.items)
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
   })
 
-  it.skip('Should allow to add forecast', () => {
+  it('Should allow to change project data while it is in review mode', () => {
+    daoInfo.infoHash = '0x' + crypto.randomBytes(32).toString('hex')
+    daoInfo.category = chance.integer({min: 0, max: 5})
 
+
+    return dao.update.sendTransaction(daoInfo.infoHash, daoInfo.category, {
+      from: creator
+    }).then(() => {
+      return dao.infoHash.call()
+    }).then(infoHash => {
+      assert.equal(infoHash, daoInfo.infoHash)
+      return dao.category.call()
+    }).then(category => {
+      assert.equal(category, daoInfo.category)
+    })
+  })
+
+  it('Should get forecasting contract', () => {
+    return dao.forecasting.call().then(_forecasting => {
+      return Forecasting.at(_forecasting)
+    }).then(_forecasting => {
+      forecasting = _forecasting
+    })
+  })
+
+  it('Shouldnt allow to add forecast', () => {
+    return forecasting.add.sendTransaction(creator, web3.toWei(chance.integer({min: 1, max: 1000 }), 'ether'), '0x' + crypto.randomBytes(32).toString('hex'))
+      .catch(err => {
+        assert.equal(errors.isJump(err.message), true)
+      })
+  })
+
+  it('Should move time to forecast period', () => {
+    const secondsToMove = (daoInfo.reviewHours * 3600)
+
+    return time.move(web3, secondsToMove).then(() => {
+      return miner.mine(web3)
+    }).then(() => {
+      return time.blockchainTime(web3).then(blockchainTime => {
+        return Promise.join(
+          forecasting.startTimestamp.call(),
+          forecasting.endTimestamp.call(),
+          (start, end) => {
+            assert.equal(blockchainTime > start.toNumber() && blockchainTime < end.toNumber(), true)
+          })
+      })
+    })
+  })
+
+  it('Should doesnt allow to update DAO', () => {
+    const infoHash = '0x' + crypto.randomBytes(32).toString('hex')
+    const category = chance.integer({min: 0, max: 5})
+
+    return dao.update.sendTransaction(infoHash, category, {
+      from: creator
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+    })
+  })
+
+  it('Should doesnt allow to update milestones', () => {
+    const i = chance.integer({min: 0, max: daoInfo.milestones.length - 1})
+
+    const newMilestone = {
+      amount: web3.toWei(chance.integer({min: 10, max: 1000}), 'ether'),
+      items: '0x' + crypto.randomBytes(32).toString('hex')
+    }
+
+    return milestones.update.sendTransaction(i, newMilestone.amount, newMilestone.items, {
+      from: creator
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+    })
+  })
+
+  it('Should add forecast', () => {
+    const forecast = {
+      address: web3.eth.accounts[1],
+      amount: web3.toWei(chance.integer({min: 1, max: 1000 }), 'ether'),
+      message: '0x' + crypto.randomBytes(32).toString('hex')
+    }
+
+    daoInfo.forecasts.push(forecast)
+
+    return forecasting.add.sendTransaction(forecast.amount, forecast.message, {
+      from: forecast.address
+    })
+  })
+
+  it('Should contains one forecast', () => {
+    return forecasting.forecastsCount.call().then(count => {
+      assert.equal(count.toString('10'), 1)
+    })
+  })
+
+  it('Should return one forecast object', () => {
+    return forecasting.get.call(0).then(forecastRawData => {
+      const forecast = parser.parseForecast(forecastRawData)
+
+      assert.equal(daoInfo.forecasts[0].address, forecast.creator)
+      assert.equal(daoInfo.forecasts[0].amount.toString('10'), forecast.amount.toString('10'))
+      assert.equal(daoInfo.forecasts[0].message, forecast.message)
+    })
+  })
+
+  it('Should return user forecast', () => {
+    return forecasting.getByUser.call(daoInfo.forecasts[0].address).then((forecastRawData) => {
+      const forecast = parser.parseUserForecast(forecastRawData)
+
+      assert.equal(daoInfo.forecasts[0].amount.toString('10'), forecast.amount.toString('10'))
+      assert.equal(daoInfo.forecasts[0].message, forecast.message)
+    })
   })
 
 })
