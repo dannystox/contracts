@@ -28,6 +28,7 @@ contract('Token', () => {
     })
   })
 
+
   it('Should\'t allow to allocate coins from another account', () => {
     return Promise.each(web3.eth.accounts, account => {
       return token.allocate.sendTransaction(account, toSend, {
@@ -58,6 +59,17 @@ contract('Token', () => {
       return token.balanceOf.call(account).then((balance) => {
         assert.equal(balance.toString(10), toSend.toString(10))
       })
+    })
+  })
+
+
+  it('Shouldnt allow to allocate same account two times', () => {
+    const account = web3.eth.accounts[0]
+
+    return token.allocate.sendTransaction(account, toSend, {
+      from: creator
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
     })
   })
 
