@@ -29,7 +29,7 @@ contract('Token/Premine', () => {
     assert.notEqual(preminer.length, 0)
 
     let now = new Date()
-    now.setHours(0,0,0)
+    now.setHours(1,0,0,0)
 
     for (let i = 0; i < duration; i++) {
       now.setMonth(now.getMonth() + 1, 1)
@@ -82,6 +82,41 @@ contract('Token/Premine', () => {
           })
         })
       })
+    })
+  })
+
+  it('Shouldnt allow to add same preminer two times', () => {
+    return token.addPreminer.sendTransaction(preminers[0].address, preminers[0].balance, preminers[0].payment).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+    })
+  })
+
+  it('Should contains preminers', () => {
+    return Promise.each(preminers, preminer => {
+      return token.getPreminer.call(preminer.address).then(preminerRawData => {
+        const parsedPreminer = parser.parsePreminer(preminerRawData)
+
+        assert.equal(parsedPreminer.payment.toString(10), preminer.payment)
+        assert.equal(parsedPreminer.allocationsCount.toNumber(), duration)
+      })
+    })
+  })
+
+
+  it('Should contains preminers allocation timestamps', () => {
+    return Promise.each(preminers, preminer => {
+      let promises = []
+
+      for (let i = 0; i < duration; i++) {
+        promises.push(token.getPreminerAllocation.call(preminer.address, i))
+      }
+
+      return Promise.all(promises).then(timestamps => {
+        return Promise.each(timestamps, (timestamp, index) => {
+          assert.equal(timestamp.toNumber(), timestamps[index])
+        })
+      })
+
     })
   })
 
