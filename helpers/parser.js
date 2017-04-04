@@ -46,10 +46,9 @@ const commentFields = {
 }
 
 const preminerFields = {
-  0: 'startTimestamp',
-  1: 'lastTimeReached',
-  2: 'monthes',
-  3: 'monthlyPayment'
+  0: 'payment',
+  1: 'latestAllocation',
+  2: 'allocationsCount'
 }
 
 const internalParser = (arr, fields) => {

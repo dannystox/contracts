@@ -275,7 +275,7 @@ contract('DAO', () => {
   })
 
   it('Shouldnt allow to add forecast', () => {
-    return forecasting.add.sendTransaction(creator, web3.toWei(chance.integer({min: 1, max: 1000 }), 'ether'), '0x' + crypto.randomBytes(32).toString('hex'))
+    return forecasting.add.sendTransaction(web3.toWei(chance.integer({min: 1, max: 1000 }), 'ether'), '0x' + crypto.randomBytes(32).toString('hex'))
       .catch(err => {
         assert.equal(errors.isJump(err.message), true)
       })
@@ -361,6 +361,33 @@ contract('DAO', () => {
       assert.equal(daoInfo.forecasts[0].amount.toString('10'), forecast.amount.toString('10'))
       assert.equal(daoInfo.forecasts[0].message, forecast.message)
     })
+  })
+
+  it('Should complete forecast period', () => {
+    const secondsToMove = (daoInfo.forecastHours * 3600)
+
+    return time.move(web3, secondsToMove).then(() => {
+      return miner.mine(web3)
+    }).then(() => {
+      return time.blockchainTime(web3).then(blockchainTime => {
+        return Promise.join(
+          forecasting.startTimestamp.call(),
+          forecasting.endTimestamp.call(),
+          (start, end) => {
+            assert.equal(blockchainTime > end.toNumber(), true)
+          })
+      })
+    })
+  })
+
+  it('Should does not allow to add new forecast', () => {
+    return forecasting.add.sendTransaction(
+      web3.toWei(chance.integer({min: 1, max: 1000 }), 'ether'),
+      '0x' + crypto.randomBytes(32).toString('hex'), {
+        from: web3.eth.accounts[3]
+      }).catch(err => {
+        assert.equal(errors.isJump(err.message), true)
+      })
   })
 
 })
