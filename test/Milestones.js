@@ -6,6 +6,7 @@ const parser = require('../helpers/parser')
 const errors = require('../helpers/errors')
 const time = require('../helpers/time')
 const miner = require('../helpers/miner')
+const BigNumber = require('bignumber.js')
 const arrayHelper = require('../helpers/arrays')
 
 contract('Milestones', () => {
@@ -42,16 +43,46 @@ contract('Milestones', () => {
     for (let i = 0; i < 5; i++) {
       const milestone = {
         amount: web3.toWei(chance.integer({min: 1, max: 1000}), 'ether'),
-        items: crypto.randomBytes(32).toString('hex')
+        items: '0x' + crypto.randomBytes(32).toString('hex')
       }
 
       milestones.push(milestone)
-      promises.push(milestonesContract.add.sendTransaction(milestone.amount, milestone.items, {
-        from: creator
-      }))
     }
 
-    return Promise.all(promises)
+    return Promise.each(milestones, milestone => {
+      return milestonesContract.add.sendTransaction(milestone.amount, milestone.items, {
+        from: creator
+      })
+    })
+  })
+
+  it('Should contains 5 milestones', () => {
+    return milestonesContract.milestonesCount.call().then(count => {
+      assert.equal(count.toNumber(), milestones.length)
+    })
+  })
+
+  it('Should contains right 5 milestones', () => {
+    return Promise.each(milestones, (milestone, index) => {
+      return milestonesContract.get.call(index).then((rawMilestoneData) => {
+        const parsedMilestone = parser.parseMilestone(rawMilestoneData)
+
+        assert.equal(milestone.amount.toString(10), parsedMilestone.amount.toString(10))
+        assert.equal(milestone.items, parsedMilestone.items)
+      })
+    })
+  })
+
+  it('Should contains right total amount', () => {
+    let totalAmount = new BigNumber(0)
+
+    return Promise.each(milestones, milestone => {
+      totalAmount = totalAmount.add(milestone.amount)
+    }).then(() => {
+      return milestonesContract.getTotalAmount.call()
+    }).then(amount => {
+      return assert.equal(amount.toString(10), totalAmount.toString(10))
+    })
   })
 
   it('Should set limitations for milestones', () => {
@@ -61,7 +92,7 @@ contract('Milestones', () => {
   })
 
   it('Should move time', () => {
-    return time.move(web3, 3601).then(() => {
+    return time.move(web3, 0).then(() => {
       return time.blockchainTime(web3)
     }).then((time) => {
       return Promise.join(
@@ -80,22 +111,24 @@ contract('Milestones', () => {
     for (let i = 0; i < 5; i++) {
       const milestone = {
         amount: web3.toWei(chance.integer({min: 1, max: 1000}), 'ether'),
-        items: crypto.randomBytes(32).toString('hex')
+        items: '0x' + crypto.randomBytes(32).toString('hex')
       }
 
       milestones.push(milestone)
-      promises.push(milestonesContract.add.sendTransaction(milestone.amount, milestone.items, {
-        from: creator
-      }))
     }
 
-    return Promise.all(promises)
+    const milestonesToPublish = milestones.slice(5)
+    return Promise.each(milestonesToPublish, milestone => {
+      return milestonesContract.add.sendTransaction(milestone.amount, milestone.items, {
+        from: creator
+      })
+    })
   })
 
   it('Shouldnt allow to add 11th milestone', () => {
     const milestone = {
       amount: web3.toWei(chance.integer({min: 1, max: 1000}), 'ether'),
-      items: crypto.randomBytes(32).toString('hex')
+      items: '0x' + crypto.randomBytes(32).toString('hex')
     }
 
     return milestonesContract.add.sendTransaction(milestone.amount, milestone.items, {
@@ -111,7 +144,7 @@ contract('Milestones', () => {
     })
   })
 
-  it('Should allow to update milestone', () => {
+  it('Should allow to update milestone: ', () => {
     const i = chance.integer({min: 0, max: milestones.length - 1})
 
     const newMilestone = {
@@ -121,10 +154,10 @@ contract('Milestones', () => {
 
     milestones[i] = newMilestone
 
-    return milestones.update.sendTransaction(i, newMilestone.amount, newMilestone.items, {
+    return milestonesContract.update.sendTransaction(i, newMilestone.amount, newMilestone.items, {
       from: creator
     }).then(() => {
-      return milestones.get(i)
+      return milestonesContract.get(i)
     }).then(milestoneRawData => {
       const milestoneData = parser.parseMilestone(milestoneRawData)
 
@@ -137,9 +170,9 @@ contract('Milestones', () => {
     const i = 5
 
     milestones = arrayHelper.remove(milestones, i)
-    return milestones.remove(i).then(() => {
+    return milestonesContract.remove(i).then(() => {
       return Promise.each(milestones, (milestone, index) => {
-        return milestones.get(index).then(milestoneRawData => {
+        return milestonesContract.get.call(index).then(milestoneRawData => {
           const milestoneData = parser.parseMilestone(milestoneRawData)
 
           assert.equal(milestone.amount.toString(10), milestoneData.amount.toString(10))
@@ -147,7 +180,7 @@ contract('Milestones', () => {
         })
       })
     }).then(() => {
-      return milestones.milestonesCount.call()
+      return milestonesContract.milestonesCount.call()
     }).then(count => {
       assert.equal(count.toString(10), milestones.length.toString(10))
     })
@@ -159,6 +192,37 @@ contract('Milestones', () => {
     })
   })
 
+  it('Should move time to non-modificate period', () => {
+      return time.move(web3, 3600).then(() => {
+        return miner.mine(web3)
+      }).then(() => {
+        return time.blockchainTime(web3)
+      }).then((time) => {
+        return milestonesContract.endTimestamp.call().then(end => {
+          assert.equal(time > end.toNumber(), true)
+        })
+      })
+  })
 
+  it('Should doesnt allow to add/update/remove new milestones', () => {
+    const i = 5
+
+    const newMilestone = {
+      amount: web3.toWei(chance.integer({min: 10, max: 1000}), 'ether'),
+      items: '0x' + crypto.randomBytes(32).toString('hex')
+    }
+
+    return milestonesContract.remove(i).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+
+      return milestonesContract.update(i, newMilestone.amount, newMilestone.items)
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+
+      return milestonesContract.add(newMilestone.amount, newMilestone.items)
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+    })
+  })
 
 })
