@@ -107,10 +107,10 @@ contract MilestonesAbstraction is Ownable {
     /*
       Get milestone by index
     */
-    function get(uint index) constant returns (uint _amount, bytes32 _items, bool _completed);
+    function get(uint index) constant returns (uint, bytes32, bool);
 
     /*
       Get milestones sum
     */
-    function getTotalAmount() constant returns (uint _amount);
+    function getTotalAmount() constant returns (uint);
 }

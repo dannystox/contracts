@@ -29,10 +29,6 @@ contract BasicMilestones is MilestonesAbstraction {
       throw;
     }
 
-    if (amount == 0) {
-      throw;
-    }
-
     var milestone = Milestone(block.timestamp, block.timestamp, amount, items, false);
     milestones[milestonesCount++] = milestone;
   }
@@ -87,7 +83,7 @@ contract BasicMilestones is MilestonesAbstraction {
   /*
     Get milestone by index
   */
-  function get(uint index) constant returns (uint _amount, bytes32 _items, bool _completed) {
+  function get(uint index) constant returns (uint, bytes32, bool) {
     var milestone = milestones[index];
 
     return (milestone.amount, milestone.items, milestone.completed);
@@ -96,7 +92,7 @@ contract BasicMilestones is MilestonesAbstraction {
   /*
     Get milestones sum
   */
-  function getTotalAmount() constant returns (uint _amount) {
+  function getTotalAmount() constant returns (uint) {
     uint sum = 0;
 
     for (var i = 0; i < milestonesCount; i++) {
