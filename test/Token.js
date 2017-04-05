@@ -22,6 +22,12 @@ contract('Token', () => {
     })
   })
 
+  it('Check total supply', () => {
+    return token.totalSupply.call(totalSupply => {
+      assert.equal(totalSupply.toString(10), web3.toWei(100000000, 'ether'))
+    })
+  })
+
   it('Allocation should be equal \'true\'', () => {
     return token.accountsToAllocate.call().then((allocation) => {
       assert.equal(allocation.gt(0), true)
