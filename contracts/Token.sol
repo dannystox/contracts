@@ -72,7 +72,7 @@ contract Token is StandardToken, Ownable {
   /*
     Check if user already allocated
   */
-  modifier whenHasntAllocated(address user) {
+  modifier whenAccountHasntAllocated(address user) {
     if (balances[user] == 0) {
       _;
     } else {
@@ -83,7 +83,7 @@ contract Token is StandardToken, Ownable {
   /*
     Check if preminer already added
   */
-  modifier checkPreminerAllocation(address preminer) {
+  modifier whenPremineHasntAllocated(address preminer) {
     if (preminers[preminer].account == address(0)) {
       _;
     } else {
@@ -106,7 +106,7 @@ contract Token is StandardToken, Ownable {
 
     Should check if user allocated already (no double allocations)
   */
-  function allocate(address user, uint balance) onlyOwner() whenAllocation(true) whenHasntAllocated(user) {
+  function allocate(address user, uint balance) onlyOwner() whenAllocation(true) whenAccountHasntAllocated(user) {
     balances[user] = balance;
 
     accountsToAllocate--;
@@ -135,7 +135,7 @@ contract Token is StandardToken, Ownable {
   /*
     Add pre-mine account
   */
-  function addPreminer(address preminer, uint initialBalance, uint monthlyPayment) onlyOwner() whenAllocation(true) checkPreminerAllocation(preminer) {
+  function addPreminer(address preminer, uint initialBalance, uint monthlyPayment) onlyOwner() whenAllocation(true) whenPremineHasntAllocated(preminer) {
     var premine = Preminer(
         preminer,
         monthlyPayment,
