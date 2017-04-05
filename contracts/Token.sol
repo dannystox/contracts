@@ -5,7 +5,7 @@ import "./zeppelin/token/StandardToken.sol";
 
 /*
   Wings ERC20 Token.
-  Added allocation for users who participiated in Wings Campagin.
+  Added allocation for users who participiated in Wings Campaign.
 
   Important!
   We have to run pre-mine allocation first.
@@ -24,7 +24,7 @@ contract Token is StandardToken, Ownable {
   event PremineRelease(address indexed account, uint timestamp, uint amount);
 
   /*
-    Premine scturcture
+    Premine structure
   */
   struct Preminer {
     address account;
@@ -36,7 +36,7 @@ contract Token is StandardToken, Ownable {
   }
 
   /*
-    List of perminers
+    List of preminers
   */
   mapping(address => Preminer) preminers;
 
@@ -46,6 +46,11 @@ contract Token is StandardToken, Ownable {
   string public name = "TWINGS";
   string public symbol = "TWINGS";
   uint public decimals = 18;
+
+  /*
+    Total supply
+  */
+  uint public totalSupply = 100000000000000000000000000;
 
   /*
     How many accounts allocated?
@@ -67,7 +72,7 @@ contract Token is StandardToken, Ownable {
   /*
     Check if user already allocated
   */
-  modifier checkUserAllocation(address user) {
+  modifier whenHasntAllocated(address user) {
     if (balances[user] == 0) {
       _;
     } else {
@@ -91,9 +96,7 @@ contract Token is StandardToken, Ownable {
       Maybe we should calculate it in allocation and pre-mine.
       I mean total supply
     */
-    totalSupply = 100000000000000000000000000;
     owner = msg.sender;
-
     accountsToAllocate = _accountsToAllocate;
   }
 
@@ -103,7 +106,7 @@ contract Token is StandardToken, Ownable {
 
     Should check if user allocated already (no double allocations)
   */
-  function allocate(address user, uint balance) onlyOwner() whenAllocation(true) checkUserAllocation(user) {
+  function allocate(address user, uint balance) onlyOwner() whenAllocation(true) whenHasntAllocated(user) {
     balances[user] = balance;
 
     accountsToAllocate--;
@@ -114,30 +117,19 @@ contract Token is StandardToken, Ownable {
     Standard Token functional
   */
   function transfer(address _to, uint _value) whenAllocation(false) returns (bool success) {
-    balances[msg.sender] = safeSub(balances[msg.sender], _value);
-    balances[_to] = safeAdd(balances[_to], _value);
-    Transfer(msg.sender, _to, _value);
-    return true;
+    return super.transfer(_to, _value);
   }
 
   function transferFrom(address _from, address _to, uint _value) whenAllocation(false) returns (bool success) {
-    var _allowance = allowed[_from][msg.sender];
-
-    balances[_to] = safeAdd(balances[_to], _value);
-    balances[_from] = safeSub(balances[_from], _value);
-    allowed[_from][msg.sender] = safeSub(_allowance, _value);
-    Transfer(_from, _to, _value);
-    return true;
+    return super.transferFrom(_from, _to, _value);
   }
 
   function approve(address _spender, uint _value) whenAllocation(false) returns (bool success) {
-    allowed[msg.sender][_spender] = _value;
-    Approval(msg.sender, _spender, _value);
-    return true;
+    return super.approve(_spender, _value);
   }
 
   /*
-    Premine functional
+    Premine functionality
   */
 
   /*
@@ -199,7 +191,7 @@ contract Token is StandardToken, Ownable {
   /*
     Release premine when preminer asking
     Gas usage: 0x5786 or 22406 GAS.
-    Maximum is 26 monthes of pre-mine in case of Wings. So should be enough to execute it.
+    Maximum is 26 months of pre-mine in case of Wings. So should be enough to execute it.
   */
   function releasePremine() whenAllocation(false) {
     var preminer = preminers[msg.sender];
@@ -208,7 +200,7 @@ contract Token is StandardToken, Ownable {
       throw;
     }
 
-    for (var i = preminer.latestAllocation; i < preminer.allocationsCount; i++) {
+    for (uint i = preminer.latestAllocation; i < preminer.allocationsCount; i++) {
       if (preminer.allocations[i] < block.timestamp) {
         if (preminer.allocations[i] == 0) {
           continue;
