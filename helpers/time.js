@@ -13,7 +13,24 @@ const moveTime = (web3, value) => {
   })
 }
 
+const currentTime = () => {
+  return Math.floor(new Date().getTime() / 1000);
+}
+
+const toSeconds = (seconds) => {
+  return Math.floor(seconds / 1000)
+}
+
+const blockchainTime = (web3) => {
+  return new Promise((resolve, reject) => {
+    const block = web3.eth.getBlock(web3.eth.blockNumber)
+    return resolve(block.timestamp)
+  })
+}
 
 module.exports = {
-  moveTime: moveTime
+  move: moveTime,
+  now: currentTime,
+  toSeconds: toSeconds,
+  blockchainTime: blockchainTime
 }

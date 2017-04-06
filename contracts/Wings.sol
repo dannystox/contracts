@@ -1,620 +1,87 @@
 pragma solidity ^0.4.2;
 
-import './helpers/strings.sol';
-import './comments/CommentAbstraction.sol';
-import './WingsCrowdsale.sol';
+import "./DAOAbstraction.sol";
+import "./DAO.sol";
 
-contract Wings {
-  using strings for *;
-
+contract Wings  {
   /*
-    Project Events
+    DAOs
   */
-  event ProjectCreation(address indexed creator, bytes32 indexed id, string name);
-  event ProjectReady(bytes32 indexed id, string name);
-  event ProjectPublishing(bytes32 indexed creator, bytes32 indexed id);
-  event MilestoneAdded(bytes indexed id);
+  mapping(bytes32 => DAO) daos;
 
   /*
-    Forecast type
+    DAOs ids
   */
-  enum ForecastRaiting {
-    Low,
-    Top
-  }
+  mapping(uint => bytes32) daosIds;
 
   /*
-    Project Categories
-   */
-  enum Categories {
-    Software,
-    Hardware,
-    Service,
-    Platform,
-    NonProfit
-  }
-
-  /*
-    Reward types
+    User DAOs
   */
-  enum RewardTypes {
-    PercentDaoTokens,
-    PercentCollectedFunds,
-    Both
-  }
+  mapping(address => mapping(uint => bytes32)) myDAOsIds;
+  mapping(address => uint) myDAOsCount;
 
   /*
-    Milestone type
+    Total amount of DAOs
   */
-  enum MilestoneType {
-    Forecast,
-    Automatic
-  }
+  uint public totalDAOsCount;
 
   /*
-    Projects Periods
+    Who creator contract
   */
-  enum ProjectPeriod {
-    Review,
-    Forecasting,
-    Funding,
-    AfterFunding
-  }
+  address public creator;
 
   /*
-    Milestone Structure
+    Wings Token Address
   */
-  struct Milestone {
-    bytes32 projectId; // id of project
-    MilestoneType _type; // type of milestone
-    uint amount; // amount of milestone to spent
-    string[] items; // milestone items
-  }
+  address public token;
 
-  /*
-    Forecast Structure
-  */
-  struct Forecast {
-    address creator;  // creator
-    bytes32 project; // project
-    ForecastRaiting raiting; // raiting
-    uint timestamp; // timestamp
-    bytes32 message; // message
-    uint sum; // sum that going to collect
-  }
-
-
-  /*
-    Wings Project Structure
-  */
-  struct Project {
-    bytes32 id; // id of project
-    //address crowdsale; // crowdsale contract of project
-    string name; // name of project
-
-    bytes32 shortBlurb; // hash of shortBlurb
-    bytes32 logoHash; // hash of project logotype
-
-    Categories category; // category of project
-    RewardTypes rewardType; // reward type
-    uint rewardPercent; // reward percent
-    uint duration; // duration of token sale
-    uint goal; // goal that project expect to collect
-
-    string videolink; // link to the video
-    bytes32 story;
-
-    address creator; // creator of the projects
-
-    uint timestamp; // timestamp when project created
-    bool cap; // project cupped under latest milestone
-
-    uint milestonesCount; // amount of milestones
-    uint forecastsCount;  // amount of forecasts
-
-    mapping(uint => Milestone) milestones; // Milestones
-    mapping(uint => Forecast) forecasts; // Forecasts
-  }
-
-  struct Crowdsale {
-    address creator;
-    bytes32 projectId;
-    address crowdsaleContract;
-  }
-
-  mapping(bytes32 => Project) projects; // project by name hash to project object
-  mapping(uint => bytes32) projectsIds; // project ids
-
-  mapping(address => mapping(uint => bytes32)) myProjectsIds; // my projects ids
-  mapping(address => uint) myProjectsCount; // my projects count
-
-  mapping(address => mapping(bytes32 => Forecast)) myForecasts; // my forecast to the project
-
-  mapping(bytes32 => Crowdsale) crowdsales;
-
-  uint count; // amount of projects
-  address creator; // creator of the contract
-
-  /*
-    Constants
-  */
-  uint constant reviewPeriod = 48 hours;
-  uint constant forecastPeriod = 96 hours;
-
-  /*
-    Contracts
-  */
-  address public commentContractAddress;
-
-  /*
-    Modifiers
-  */
-  modifier onlyCreator() {
-    if (msg.sender == creator) {
-      _;
-    }
-  }
-
-  modifier projectOwner(bytes32 projectId) {
-    var project = projects[projectId];
-
-    if (project.creator == msg.sender) {
-      _;
-    }
-  }
-
-  modifier allowToAddMilestone(bytes32 projectId) {
-    var project = projects[projectId];
-
-    if (block.timestamp < project.timestamp + reviewPeriod) {
-      _;
-    }
-  }
-
-  modifier allowToStartCrowdsale(bytes32 projectId) {
-    var crowdsale = crowdsales[projectId];
-
-    if (crowdsale.creator == address(0)) {
-      _;
-    }
-  }
-
-  modifier checkPeriod(bytes32 projectId, ProjectPeriod _period) {
-    var projectPeriod = getProjectPeriod(projectId);
-
-    if (_period == projectPeriod) {
-      _;
-    }
-  }
-
-  /*
-    Code
-  */
-  function Wings(address _commentContractAddress) {
+  function Wings(address _token) {
+    token = _token;
     creator = msg.sender;
-    commentContractAddress = _commentContractAddress;
-  }
-
-  function getProjectId(uint n) constant returns (bytes32) {
-    return projectsIds[n];
-  }
-
-  function getMyProjectsCount(address owner) constant returns (uint) {
-    return myProjectsCount[owner];
-  }
-
-  function getMyProjectId(address owner, uint id) constant returns (bytes32) {
-    return myProjectsIds[owner][id];
   }
 
   /*
-    Publish project
+    Add new project to Wings
   */
-  function addProject(
-      string _name,
-      bytes32 _shortBlurb,
-      bytes32 _logoHash,
-      Categories _category,
-      RewardTypes _rewardType,
-      uint _rewardPercent,
-      uint _duration,
-      uint _goal,
-      string _videolink,
-      bytes32 _story,
-      bool cap
-    ) returns (bool) {
-      bytes32 _projectId = sha256(_name);
+  function addDAO(string _name, bytes32 _infoHash, uint _category, bool _underCap, uint _reviewHours) {
+    bytes32 _daoId = sha256(_name);
 
-      if (projects[_projectId].creator != address(0)) {
-        throw;
-      }
-
-      if (_rewardPercent > 100 || _rewardPercent == 0) {
-        throw;
-      }
-
-      if (_duration > 180 || _duration < 30) {
-        throw;
-      }
-
-      //address _crowdsale = new WingsCrowdsale(_name, _name);
-
-      var project = Project(
-        _projectId,
-        _name,
-        _shortBlurb,
-        _logoHash,
-        _category,
-        _rewardType,
-        _rewardPercent,
-        _duration,
-        _goal,
-        _videolink,
-        _story,
-        msg.sender, // creator
-        block.timestamp, // timestamp
-        cap, // cap
-        0,
-        0
-      );
-
-      projects[_projectId] = project;
-      projectsIds[count++] = _projectId;
-      myProjectsIds[msg.sender][myProjectsCount[msg.sender]++] = _projectId;
-
-      ProjectCreation(msg.sender, _projectId, project.name);
-      return true;
-  }
-
-
-  /* Get base project info */
-  function getBaseProject(bytes32 id) constant returns (
-      bytes32 projectId,
-      string name,
-      bytes32 logoHash,
-      Categories category,
-      bytes32 shortBlurb,
-      bool cap,
-      uint duration,
-      uint goal,
-      uint timestamp
-    ) {
-      var project = projects[id];
-
-      return (
-          project.id,
-          project.name,
-          project.logoHash,
-          project.category,
-          project.shortBlurb,
-          project.cap,
-          project.duration,
-          project.goal,
-          project.timestamp
-        );
-    }
-
-  function getProject(bytes32 id) constant returns (
-      bytes32 projectId,
-      string name,
-      RewardTypes rewardType,
-      uint rewardPercent,
-      string videolink,
-      bytes32 story,
-      address creator,
-      uint timestamp
-    ) {
-    var project = projects[id];
-
-    return (
-      project.id,
-      project.name,
-      project.rewardType,
-      project.rewardPercent,
-      project.videolink,
-      project.story,
-      project.creator,
-      project.timestamp
-    );
-  }
-
-  /*
-    Change owner of project
-   */
-  function changeCreator(bytes32 id, address to) projectOwner(id) {
-    var project = projects[id];
-    project.creator = to;
-  }
-
-  function getItemsFromString(string str) private constant returns (string[]) {
-    var s = str.toSlice();
-    var delim = "\n".toSlice();
-    var parts = new string[](s.count(delim));
-    for(uint i = 0; i < parts.length; i++) {
-        parts[i] = s.split(delim).toString();
-    }
-
-    return parts;
-  }
-
-  function concatStrs(string[] strs) private constant returns (string) {
-    var s = "";
-    for (var i = 0; i < strs.length; i++) {
-      s = s.toSlice().concat(strs[i].toSlice());
-      s = s.toSlice().concat("\n".toSlice());
-    }
-
-    return s;
-  }
-
-  /*
-    Get count of projects
-  */
-  function getCount() constant returns (uint) {
-    return count;
-  }
-
-  /*
-    Add milestone
-  */
-  function addMilestone(bytes32 id, MilestoneType _type, uint amount, string _items) projectOwner(id) allowToAddMilestone(id) {
-    var project = projects[id];
-    if (project.creator == address(0) || project.milestonesCount == 10 || amount == 0) {
+    if (daos[_daoId] != address(0)) {
       throw;
     }
 
-    uint milestonesSum = 0;
-    for (var i = 0; i < project.milestonesCount; i++) {
-      milestonesSum += project.milestones[i].amount;
-    }
+    var dao = new DAO(msg.sender, _name, _infoHash, _category, _underCap, _reviewHours, token);
 
-
-    uint diff = project.goal - milestonesSum;
-
-    if (diff < amount) {
-      throw;
-    }
-
-    var items = getItemsFromString(_items);
-
-    if (items.length > 10 || items.length == 0) {
-      throw;
-    }
-
-    var milestone = Milestone(id, _type, amount, items);
-    project.milestones[project.milestonesCount++] = milestone;
-  }
-
-  // get milestones count
-  function getMilestonesCount(bytes32 id) constant returns (uint) {
-    var project = projects[id];
-
-    return project.milestonesCount;
+    daos[_daoId] = dao;
+    daosIds[totalDAOsCount++] = _daoId;
+    myDAOsIds[msg.sender][myDAOsCount[msg.sender]++] = _daoId;
   }
 
   /*
-    Get milestone
+    Get DAO by Id
   */
-  function getMilestone(bytes32 id, uint milestoneId) constant returns (MilestoneType _type, uint amount, string items) {
-    var project = projects[id];
-
-    if (project.creator == address(0)) {
-      throw;
-    }
-
-    var milestone = project.milestones[milestoneId];
-    var _items = concatStrs(milestone.items);
-
-    return (milestone._type, milestone.amount, _items);
+  function getDAOById(bytes32 _daoId) constant returns (address _dao) {
+    return daos[_daoId];
   }
 
   /*
-    Get minimal goal of the project
+    Get DAO Id by index
   */
-  function getMinimalGoal(bytes32 id) constant returns (uint minimal) {
-    var project = projects[id];
-
-    if (project.creator == address(0)) {
-      throw;
-    }
-
-    if (project.milestonesCount == 0) {
-      return 0;
-    }
-
-    return project.milestones[0].amount;
+  function getDAOId(uint _n) constant returns (bytes32 _id) {
+    return daosIds[_n];
   }
 
   /*
-    Get project period
+    Get user daos count
   */
-  function getProjectPeriod(bytes32 projectId) returns (ProjectPeriod _period) {
-    var project = projects[projectId];
-
-    if (project.creator == address(0)) {
-      throw;
-    }
-
-    var projectTimestamp = project.timestamp;
-    var time = block.timestamp;
-
-    if (time < (projectTimestamp + reviewPeriod)) {
-      return ProjectPeriod.Review;
-    }
-
-    if (time < (projectTimestamp + (reviewPeriod + forecastPeriod))) {
-      return ProjectPeriod.Forecasting;
-    }
-
-    /*
-      ToDo:
-      Check cap and funding goals here
-    */
-    var crowdsale = crowdsales[projectId];
-    if (time < (projectTimestamp + project.duration * 1 days)) {
-      return ProjectPeriod.Funding;
-    }
-
-    return ProjectPeriod.AfterFunding;
+  function getUserDAOsCount(address _user) constant returns (uint _count) {
+    return myDAOsCount[_user];
   }
 
   /*
-    Get cap goal of the project
+    Get user daos id
   */
-  function getCap(bytes32 id) constant returns (uint cap) {
-    var project = projects[id];
-
-    if (project.creator == address(0) || project.cap == false) {
-      throw;
-    }
-
-    uint amount = 0;
-    for (var i = 0; i < project.milestonesCount; i++) {
-      amount = amount + project.milestones[i].amount;
-    }
-
-    return amount;
+  function getUserDAOsId(address _user, uint _n) constant returns (bytes32 _id) {
+    return myDAOsIds[_user][_n];
   }
-
-  /*
-    Forecasting
-  */
-  function addForecast(bytes32 projectId, uint sum, bytes32 message) checkPeriod(projectId, ProjectPeriod.Forecasting) {
-    var project = projects[projectId];
-
-    if (project.creator == address(0)) {
-      throw;
-    }
-
-    if (myForecasts[msg.sender][projectId].creator != address(0)) {
-      throw;
-    }
-
-    if (sum > project.goal) {
-      throw;
-    }
-
-    uint goalPart = project.goal / 2;
-
-    ForecastRaiting raiting = ForecastRaiting.Low;
-
-    if (sum > goalPart) {
-      raiting = ForecastRaiting.Top;
-    }
-
-    var forecast = Forecast(
-      msg.sender,
-      projectId,
-      raiting,
-      block.timestamp,
-      message,
-      sum
-    );
-
-    project.forecasts[project.forecastsCount++] = forecast;
-    myForecasts[msg.sender][projectId] = forecast;
-  }
-
-  /*
-    Get forecasts count
-  */
-  function getForecastCount(bytes32 projectId) constant returns (uint) {
-    var project = projects[projectId];
-    return project.forecastsCount;
-  }
-
-  /*
-    Get forecast by number
-    address creator;  // creator
-    bytes32 project; // project
-    ForecastRaiting raiting; // raiting
-    uint timestamp; // timestamp
-  */
-  function getForecast(bytes32 projectId, uint id) constant returns (
-      address _creator,
-      bytes32 _project,
-      ForecastRaiting _raiting,
-      uint _timestamp,
-      bytes32 _message,
-      uint sum
-    ) {
-      var project = projects[projectId];
-      var forecast = project.forecasts[id];
-
-      return (
-        forecast.creator,
-        forecast.project,
-        forecast.raiting,
-        forecast.timestamp,
-        forecast.message,
-        forecast.sum
-      );
-  }
-
-  /*
-    Get my forecast for project
-  */
-  function getMyForecast(bytes32 projectId) constant returns (
-      address _creator,
-      bytes32 _project,
-      ForecastRaiting _raiting,
-      uint _timestamp,
-      bytes32 _message,
-      uint _sum
-    ) {
-      var forecast = myForecasts[msg.sender][projectId];
-
-      return (
-        forecast.creator,
-        forecast.project,
-        forecast.raiting,
-        forecast.timestamp,
-        forecast.message,
-        forecast.sum
-      );
-    }
-
-  function startCrowdsale(bytes32 projectId) projectOwner(projectId) allowToStartCrowdsale(projectId) checkPeriod(projectId, ProjectPeriod.Review) {
-    var project = projects[projectId];
-
-    address crowdsaleContract = new WingsCrowdsale(project.name, project.name);
-    var crowdsale = Crowdsale(
-        msg.sender,
-        projectId,
-        crowdsaleContract
-      );
-
-    crowdsales[projectId] = crowdsale;
-  }
-
-  function getCrowdsale(bytes32 projectId) constant returns (address, address) {
-    var crowdsale = crowdsales[projectId];
-    return (
-        crowdsale.creator,
-        crowdsale.crowdsaleContract
-      );
-  }
-
-  /*
-    Comments
-  */
-  function addComment(bytes32 projectId, bytes32 data) {
-    CommentAbstraction comments = CommentAbstraction(commentContractAddress);
-    comments.addComment(projectId, data);
-  }
-
-  function getCommentsCount(bytes32 projectId) constant returns (uint) {
-    CommentAbstraction comments = CommentAbstraction(commentContractAddress);
-    return comments.getCommentsCount(projectId);
-  }
-
-  function getComment(bytes32 projectId, uint index) constant returns (address, bytes32, bytes32, uint) {
-    CommentAbstraction comments = CommentAbstraction(commentContractAddress);
-    return comments.getComment(projectId, index);
-  }
-
-  function updateCommentContract(address newCommentContractAddress) onlyCreator {
-    commentContractAddress = newCommentContractAddress;
-  }
-
 }
