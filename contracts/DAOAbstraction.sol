@@ -6,17 +6,6 @@ import "./forecasts/ForecastingAbstraction.sol";
 
 contract DAOAbstraction is Ownable {
   /*
-    Project Categories
-  */
-  enum Categories {
-    Software,
-    Hardware,
-    Service,
-    Platform,
-    NonProfit
-  }
-
-  /*
     Projects Periods
   */
   enum ProjectPeriod {
@@ -31,8 +20,6 @@ contract DAOAbstraction is Ownable {
   bytes32 public infoHash; // information hash of project
 
   address public token; // token contract address
-
-  uint public category; // category of project
 
   uint public timestamp; // timestamp when project created
 
@@ -96,18 +83,10 @@ contract DAOAbstraction is Ownable {
     _;
   }
 
-  modifier checkCategory(uint _category) {
-    if (_category > 5) {
-      throw;
-    }
-
-    _;
-  }
-
   /*
     Update project data
   */
-  function update(bytes32 _infoHash, uint _category) onlyOwner() onlyReview();
+  function update(bytes32 _infoHash) onlyOwner() onlyReview();
 
   /*
     Start DAO process

@@ -9,15 +9,13 @@ contract DAO is DAOAbstraction {
       address _owner,
       string _name,
       bytes32 _infoHash,
-      uint _category,
       bool _underCap,
       uint _reviewHours,
-      address _token) checkReviewHours(_reviewHours) checkCategory(_category) {
+      address _token) checkReviewHours(_reviewHours) {
         owner = _owner;
         id = sha256(_name);
         name = _name;
         infoHash = _infoHash;
-        category = _category;
         timestamp = block.timestamp;
         underCap = _underCap;
         reviewHours = _reviewHours;
@@ -47,8 +45,7 @@ contract DAO is DAOAbstraction {
   /*
     Update project data
   */
-  function update(bytes32 _infoHash, uint _category) onlyOwner() onlyReview() checkCategory(_category) {
+  function update(bytes32 _infoHash) onlyOwner() onlyReview() {
     infoHash = _infoHash;
-    category = _category;
   }
 }
