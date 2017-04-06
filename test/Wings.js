@@ -19,7 +19,6 @@ contract('Wings', () => {
     dao = {
       name: chance.word(),
       infoHash: '0x' + crypto.randomBytes(32).toString('hex'),
-      category: chance.integer({min: 0, max: 5}),
       underCap: false,
       reviewHours: chance.integer({min: 1, max: 504 })
     }
@@ -36,7 +35,7 @@ contract('Wings', () => {
   })
 
   it('Add DAO project', () => {
-    return wings.addDAO.sendTransaction(dao.name, dao.infoHash, dao.category, dao.underCap, dao.reviewHours, {
+    return wings.addDAO.sendTransaction(dao.name, dao.infoHash, dao.underCap, dao.reviewHours, {
       from: creator
     }).then(() => {
       dao.id = '0x' + crypto.createHash('sha256').update(dao.name, 'utf8').digest().toString('hex')
@@ -59,7 +58,6 @@ contract('Wings', () => {
         dao.name.call(),
         dao.infoHash.call(),
         dao.token.call(),
-        dao.category.call(),
         dao.reviewHours.call()
       ], results => {
         assert.equal(results[0], dao.owner)
@@ -67,8 +65,7 @@ contract('Wings', () => {
         assert.equal(results[2], dao.name)
         assert.equal(results[3], dao.infoHash),
         assert.equal(results[4], token.address),
-        assert.equal(results[5].toNumber(), dao.category)
-        assert.equal(results[6].toNumber(), dao.reviewHours)
+        assert.equal(results[5].toNumber(), dao.reviewHours)
       })
     })
   })
