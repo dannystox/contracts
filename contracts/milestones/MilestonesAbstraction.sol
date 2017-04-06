@@ -4,8 +4,9 @@
 pragma solidity ^0.4.2;
 
 import "../zeppelin/Ownable.sol";
+import "../zeppelin/SafeMath.sol";
 
-contract MilestonesAbstraction is Ownable {
+contract MilestonesAbstraction is Ownable, SafeMath {
     modifier onlyParent() {
       if (msg.sender == parent) {
         _;
@@ -70,12 +71,17 @@ contract MilestonesAbstraction is Ownable {
     /*
       Max count of milestones
     */
-    uint public maxCount;
+    uint public MAX_COUNT = 10;
 
     /*
       Is we under cap
     */
     bool public cap;
+
+    /*
+      Total amount
+    */
+    uint public totalAmount;
 
     /*
       Set time when it's possible to start adding milestones and when it's not possible.

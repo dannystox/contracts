@@ -9,7 +9,6 @@ contract BasicMilestones is MilestonesAbstraction {
   function BasicMilestones(address _owner, bool _cap) {
     owner = _owner;
     parent = msg.sender;
-    maxCount = 10;
     cap = _cap;
   }
 
@@ -25,12 +24,13 @@ contract BasicMilestones is MilestonesAbstraction {
     Adding milestones
   */
   function add(uint amount, bytes32 items) onlyOwner() inTime() {
-    if (milestonesCount == maxCount || amount < 1) {
+    if (milestonesCount == MAX_COUNT || amount < 1) {
       throw;
     }
 
     var milestone = Milestone(block.timestamp, block.timestamp, amount, items, false);
     milestones[milestonesCount++] = milestone;
+    totalAmount = safeAdd(totalAmount, amount);
   }
 
   /*
@@ -42,9 +42,14 @@ contract BasicMilestones is MilestonesAbstraction {
     }
 
     var milestone = milestones[index];
+
+    totalAmount = safeSub(totalAmount, milestone.amount);
+
     milestone.amount = amount;
     milestone.items = items;
     milestone.updated_at = block.timestamp;
+
+    totalAmount = safeAdd(totalAmount, amount);
   }
 
   /*
@@ -58,6 +63,8 @@ contract BasicMilestones is MilestonesAbstraction {
     if (index > milestonesCount) {
       throw;
     }
+
+    totalAmount = safeSub(totalAmount, milestones[index].amount);
 
     for (var i = index; i < milestonesCount-1; i++) {
       milestones[i] = milestones[i+1];
@@ -89,16 +96,4 @@ contract BasicMilestones is MilestonesAbstraction {
     return (milestone.amount, milestone.items, milestone.completed);
   }
 
-  /*
-    Get milestones sum
-  */
-  function getTotalAmount() constant returns (uint) {
-    uint sum = 0;
-
-    for (var i = 0; i < milestonesCount; i++) {
-      sum += milestones[i].amount;
-    }
-
-    return sum;
-  }
 }
