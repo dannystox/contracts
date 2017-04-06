@@ -65,13 +65,6 @@ contract Wings  {
   }
 
   /*
-    Get total count of projects
-  */
-  function getTotalCount() constant returns (uint _count) {
-    return totalDAOsCount;
-  }
-
-  /*
     Get DAO Id by index
   */
   function getDAOId(uint _n) constant returns (bytes32 _id) {
