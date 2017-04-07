@@ -91,6 +91,14 @@ contract Token is StandardToken, Ownable {
     }
   }
 
+  modifier checkPayload(uint argsLength) {
+    if (msg.data.length != (argsLength+4)) {
+      throw;
+    }
+
+    _;
+  }
+
   function Token(uint _accountsToAllocate) {
     /*
       Maybe we should calculate it in allocation and pre-mine.
@@ -106,7 +114,7 @@ contract Token is StandardToken, Ownable {
 
     Should check if user allocated already (no double allocations)
   */
-  function allocate(address user, uint balance) onlyOwner() whenAllocation(true) whenAccountHasntAllocated(user) {
+  function allocate(address user, uint balance) onlyOwner() whenAllocation(true) whenAccountHasntAllocated(user) checkPayload(32+32) {
     balances[user] = balance;
 
     accountsToAllocate--;
@@ -116,15 +124,15 @@ contract Token is StandardToken, Ownable {
   /*
     Standard Token functional
   */
-  function transfer(address _to, uint _value) whenAllocation(false) returns (bool success) {
+  function transfer(address _to, uint _value) whenAllocation(false) checkPayload(32+32) returns (bool success) {
     return super.transfer(_to, _value);
   }
 
-  function transferFrom(address _from, address _to, uint _value) whenAllocation(false) returns (bool success) {
+  function transferFrom(address _from, address _to, uint _value) whenAllocation(false) checkPayload(32+32+32) returns (bool success) {
     return super.transferFrom(_from, _to, _value);
   }
 
-  function approve(address _spender, uint _value) whenAllocation(false) returns (bool success) {
+  function approve(address _spender, uint _value) whenAllocation(false) checkPayload(32+32) returns (bool success) {
     return super.approve(_spender, _value);
   }
 
@@ -135,7 +143,7 @@ contract Token is StandardToken, Ownable {
   /*
     Add pre-mine account
   */
-  function addPreminer(address preminer, uint initialBalance, uint monthlyPayment) onlyOwner() whenAllocation(true) whenPremineHasntAllocated(preminer) {
+  function addPreminer(address preminer, uint initialBalance, uint monthlyPayment) onlyOwner() whenAllocation(true) whenPremineHasntAllocated(preminer) checkPayload(32+32+32) {
     var premine = Preminer(
         preminer,
         monthlyPayment,
@@ -153,7 +161,7 @@ contract Token is StandardToken, Ownable {
   /*
     Add pre-mine allocation
   */
-  function addPremineAllocation(address _preminer, uint _time) onlyOwner() whenAllocation(true) {
+  function addPremineAllocation(address _preminer, uint _time) onlyOwner() whenAllocation(true) checkPayload(32+32) {
     var preminer = preminers[_preminer];
 
     if (preminer.account == address(0) || _time == 0) {
