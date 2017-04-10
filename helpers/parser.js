@@ -7,7 +7,7 @@ const projectFields = {
   5: 'story',
   6: 'creator',
   7: 'timestamp'
-};
+}
 
 const projectBaseFields = {
   0: 'projectId',
@@ -19,51 +19,62 @@ const projectBaseFields = {
   6: 'duration',
   7: 'goal',
   8: 'timestamp'
-};
+}
 
 const milestoneFields = {
-  0: 'type',
-  1: 'amount',
-  2: 'items'
-};
+  0: 'amount',
+  1: 'items'
+}
 
 const forecastFields = {
   0: 'creator',
-  1: 'projectId',
-  2: 'raiting',
-  3: 'timestamp',
-  4: 'message'
-};
+  1: 'amount',
+  2: 'timestamp',
+  3: 'message'
+}
 
-let internalParser = (arr, fields) => {
-  const result = {};
+const forecastUserFields = {
+  0: 'amount',
+  1: 'timestamp',
+  2: 'message'
+}
+
+const commentFields = {
+  0: 'creator',
+  1: 'timestamp',
+  2: 'data'
+}
+
+const preminerFields = {
+  0: 'payment',
+  1: 'latestAllocation',
+  2: 'allocationsCount'
+}
+
+const internalParser = (arr, fields) => {
+  const result = {}
 
   for (let i in arr) {
-    result[fields[i]] = arr[i];
+    result[fields[i]] = arr[i]
   }
 
-  return result;
+  return result
 }
 
-let parseProject = (arr) => {
-  return internalParser(arr, projectFields);
-}
-
-let parseBaseProject = (arr) => {
-  return internalParser(arr, projectBaseFields);
-}
-
-let parseMilestone = (arr) => {
-  return internalParser(arr, milestoneFields);
-}
-
-let parseForecast = (arr) => {
-  return internalParser(arr, forecastFields);
-}
+const parseProject = (arr) => internalParser(arr, projectFields)
+const parseBaseProject = (arr) => internalParser(arr, projectBaseFields)
+const parseMilestone = (arr) => internalParser(arr, milestoneFields)
+const parseForecast = (arr) => internalParser(arr, forecastFields)
+const parseComment = (arr) => internalParser(arr, commentFields)
+const parsePreminer = (arr) => internalParser(arr, preminerFields)
+const parseUserForecast = (arr) => internalParser(arr, forecastUserFields)
 
 module.exports = {
-  parseProject: parseProject,
-  parseBaseProject: parseBaseProject,
-  parseMilestone: parseMilestone,
-  parseForecast: parseForecast
+  parseProject,
+  parseBaseProject,
+  parseMilestone,
+  parseForecast,
+  parseUserForecast,
+  parseComment,
+  parsePreminer
 }
