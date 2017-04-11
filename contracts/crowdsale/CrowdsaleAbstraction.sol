@@ -2,7 +2,7 @@ pragma solidity ^0.4.2;
 
 import "../zeppelin/token/StandardToken.sol";
 import "../milestones/MilestonesAbstraction.sol";
-import "../forecasting/ForecastingAbstraction.sol";
+import "../forecasts/ForecastingAbstraction.sol";
 import "../zeppelin/Ownable.sol";
 
 /*

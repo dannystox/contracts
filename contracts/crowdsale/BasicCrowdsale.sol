@@ -2,7 +2,7 @@ pragma solidity ^0.4.2;
 
 import "./CrowdsaleAbstraction.sol";
 import "../milestones/BasicMilestones.sol";
-import "../forecasting/BasicForecasting.sol";
+import "../forecasts/BasicForecasting.sol";
 
 /*
   ToDo:
