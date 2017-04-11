@@ -3,7 +3,6 @@ pragma solidity ^0.4.2;
 import "./zeppelin/Ownable.sol";
 import "./milestones/MilestonesAbstraction.sol";
 import "./forecasts/ForecastingAbstraction.sol";
-import "./zeppelin/"
 
 contract DAOAbstraction is Ownable {
   /*
