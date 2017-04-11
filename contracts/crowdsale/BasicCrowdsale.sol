@@ -46,6 +46,8 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     paritcipiants[msg.sender] = safeAdd(paritcipiants[msg.sender], msg.value);
 
     totalCollected = safeAdd(totalCollected, msg.value);
+    contractBalance = safeAdd(totalCollected, msg.value);
+
     totalSupply = safeAdd(totalSupply, tokens);
     balances[recipient] = safeAdd(balances[recipient], tokens);
   }
@@ -91,7 +93,7 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
       throw;
     }
 
-    var vestingAccount = vestingAccount(
+    var vestingAccount = VestingAccount(
         _account,
         _initialPayment,
         _payment,
@@ -106,23 +108,23 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
   function addVestingAllocation(address _account, uint _timestamp) onlyOwner() isPossibleToModificate() {
     var vestingAccount = vestingAccounts[_account];
 
-    if (vestingAccount.address == address(0) || _timestamp == 0) {
+    if (vestingAccount.account == address(0) || _timestamp == 0) {
       throw;
     }
 
     if (vestingAccount.allocationsCount == 0) {
       uint previousAllocation = vestingAccount.allocations[vestingAccount.allocationsCount-1];
 
-      if (previousAllocation > _time) {
+      if (previousAllocation > _timestamp) {
         throw;
       }
     }
 
-    vestingAccount.allocations[vestingAccount.allocations++] = _time;
+    vestingAccount.allocations[vestingAccount.allocationsCount++] = _timestamp;
   }
 
   function releaseVestingAllocation() isCrowdsaleCompleted() {
-    var vestingAccount = preminers[msg.sender];
+    var vestingAccount = vestingAccounts[msg.sender];
 
     if (vestingAccount.account == address(0)) {
       throw;
@@ -134,7 +136,7 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
           continue;
         }
 
-        balances[vestingAccount.account] = safeAdd(balances[vestingAccount.account], vestingAccount.monthlyPayment);
+        balances[vestingAccount.account] = safeAdd(balances[vestingAccount.account], vestingAccount.payment);
         vestingAccount.latestAllocation = i;
         vestingAccount.allocations[i] = 0;
       } else {
@@ -173,7 +175,13 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     Withdraw eth
   */
   function withdraw(uint _amount) payable onlyOwner() isCrowdsaleCompleted() {
-    multisig.send(_amount);
+    if (_amount > contractBalance) {
+      throw;
+    }
+
+    if (!multisig.send(_amount)) {
+      throw;
+    }
   }
 
   /*
@@ -183,7 +191,9 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     uint sendBack = paritcipiants[msg.sender];
 
     if (sendBack > 0) {
-      msg.sender.send(sendBack);
+      if (!msg.sender.send(sendBack)) {
+        throw;
+      }
     } else {
       throw;
     }

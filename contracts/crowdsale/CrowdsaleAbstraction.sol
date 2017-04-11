@@ -56,7 +56,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Only forecaster
   */
   modifier onlyForecasting() {
-    if (msg.sender != forecasting) {
+    if (msg.sender != address(forecasting)) {
       throw;
     }
 
@@ -102,6 +102,13 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   mapping(uint => PriceChange) public priceChanges;
 
   /*
+    ERC20
+  */
+  string public name;
+  string public symbol;
+  uint public decimals = 18;
+
+  /*
     Owner of crowdsale
   */
   address public owner;
@@ -125,6 +132,11 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Total collected amount
   */
   uint public totalCollected;
+
+  /*
+    Contract balance
+  */
+  uint public contractBalance; 
 
   /*
     Price of token
@@ -165,25 +177,6 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Set timestamp limitations
   */
   function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyOwner() isPossibleToModificate();
-
-  /*
-    Standard ERC20 Token
-  */
-
-  /*
-    Token transfer
-  */
-  function transfer(address _to, uint _value) isCrowdsaleCompleted() returns (bool success);
-
-  /*
-    Token transfer from
-  */
-  function transferFrom(address _from, address _to, uint _value) isCrowdsaleCompleted() returns (bool success);
-
-  /*
-    Approve of transfer
-  */
-  function approve(address _spender, uint _value) isCrowdsaleCompleted() returns (bool success);
 
   /*
       Vesting
