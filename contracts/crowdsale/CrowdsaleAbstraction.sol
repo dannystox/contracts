@@ -7,10 +7,11 @@ import "../zeppelin/Ownable.sol";
 
 /*
   ToDo:
-    - Pre-mine allocation
+    - Pre-mine allocation +
     - User reward allocation
     - Price based on time
     - Check timestamps verifications
+    - Complete payback with verification that crowdsale failed
 */
 contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
@@ -21,6 +22,10 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
       throw;
     }
 
+    _;
+  }
+
+  modifier isCrowdsaleFailed() {
     _;
   }
 
@@ -73,10 +78,28 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   }
 
   /*
+    Struct Price change
+  */
+  struct PriceChange {
+    uint timestamp;
+    uint price;
+  }
+
+  /*
     Vesting accounts list
   */
-  mapping(address => VestingAccount) vestingAccounts;
+  mapping(address => VestingAccount) public vestingAccounts;
 
+  /*
+    Paritcipiants
+  */
+  mapping(address => uint) public paritcipiants;
+
+  /*
+    Mapping price changing time
+  */
+  uint public priceChangesLength;
+  mapping(uint => PriceChange) public priceChanges;
 
   /*
     Owner of crowdsale
@@ -130,6 +153,10 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   uint public rewardPercent;
 
   /*
+    Wings Crowdsale Functional
+  */
+
+  /*
     Create tokens for participiant
   */
   function createTokens(address recipient) payable isCrowdsaleAlive();
@@ -138,6 +165,10 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Set timestamp limitations
   */
   function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyOwner() isPossibleToModificate();
+
+  /*
+    Standard ERC20 Token
+  */
 
   /*
     Token transfer
@@ -155,6 +186,10 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   function approve(address _spender, uint _value) isCrowdsaleCompleted() returns (bool success);
 
   /*
+      Vesting
+  */
+
+  /*
     Add vesting account
   */
   function addVestingAccount(address _account, uint _initialPayment, uint _payment) onlyOwner() isPossibleToModificate();
@@ -170,12 +205,35 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   function releaseVestingAllocation() isCrowdsaleCompleted();
 
   /*
+    Bonuses
+  */
+
+  /*
+    Add price change
+  */
+  function addPriceChange(uint _timestamp, uint _price) onlyOwner() isPossibleToModificate();
+
+
+  /*
+    Forecasting
+  */
+
+  /*
     Give reward to forecaster based on percent from reward percent
   */
   function giveReward(address _account, uint _percent) onlyForecasting() isCrowdsaleCompleted();
 
   /*
+    ETH functions (Payable)
+  */
+
+  /*
     Withdraw ETH
   */
   function withdraw(uint _amount) payable onlyOwner() isCrowdsaleCompleted();
+
+  /*
+    Payback (only if crowdsale is not success)
+  */
+  function payback() payable isCrowdsaleFailed();
 }

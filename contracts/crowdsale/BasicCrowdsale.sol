@@ -34,7 +34,7 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
       rewardPercent = _rewardPercent;
   }
 
-  function () payable {
+  function () payable isCrowdsaleAlive() {
     createTokens(msg.sender);
   }
 
@@ -42,6 +42,8 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     if (msg.value == 0) throw;
 
     uint tokens = safeMul(msg.value, getPrice());
+
+    paritcipiants[msg.sender] = safeAdd(paritcipiants[msg.sender], msg.value);
 
     totalCollected = safeAdd(totalCollected, msg.value);
     totalSupply = safeAdd(totalSupply, tokens);
@@ -59,7 +61,17 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
   }
 
   function getPrice() constant returns (uint result) {
-    return price;
+    uint currentPrice = price;
+
+    for (uint i = 0; i < priceChangesLength; i++) {
+      if (priceChanges[i].timestamp < block.timestamp) {
+        currentPrice = priceChanges[i].price;
+      } else {
+        break;
+      }
+    }
+
+    return currentPrice;
   }
 
   function transfer(address _to, uint _value) isCrowdsaleCompleted() returns (bool success) {
@@ -131,6 +143,22 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     }
   }
 
+  function addPriceChange(uint _timestamp, uint _price) onlyOwner() isPossibleToModificate() {
+    if (priceChangesLength == 10) {
+      throw;
+    }
+
+    if (priceChangesLength > 0) {
+      var previousPriceChange = priceChanges[priceChangesLength-1];
+
+      if (previousPriceChange.timestamp < _timestamp) {
+        throw;
+      }
+    }
+
+    priceChanges[priceChangesLength++] = PriceChange(_timestamp, _price);
+  }
+
   /*
     Here we giving reward to account in percents
   */
@@ -141,7 +169,23 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     balances[_account] = safeAdd(balances[_account], reward);
   }
 
+  /*
+    Withdraw eth
+  */
   function withdraw(uint _amount) payable onlyOwner() isCrowdsaleCompleted() {
     multisig.send(_amount);
+  }
+
+  /*
+    Is crowdsale failed
+  */
+  function payback() payable isCrowdsaleFailed() {
+    uint sendBack = paritcipiants[msg.sender];
+
+    if (sendBack > 0) {
+      msg.sender.send(sendBack);
+    } else {
+      throw;
+    }
   }
 }
