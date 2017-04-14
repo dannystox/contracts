@@ -53,6 +53,12 @@ contract Token is StandardToken, Ownable {
   uint public totalSupply = 10**26;//100000000000000000000000000;
 
   /*
+    Premine allocation interval
+  */
+  uint public DAYS_28 = 2419200;
+  uint public DAYS_31 = 2678400;
+
+  /*
     How many accounts allocated?
   */
   uint public accountsToAllocate;
@@ -164,6 +170,14 @@ contract Token is StandardToken, Ownable {
       var previousAllocation = preminer.allocations[preminer.allocationsCount-1];
 
       if (previousAllocation > _time) {
+        throw;
+      }
+
+      if (previousAllocation + DAYS_28 > _time) {
+        throw;
+      }
+
+      if (previousAllocation + DAYS_31 < _time) {
         throw;
       }
     }
