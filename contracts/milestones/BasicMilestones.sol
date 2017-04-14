@@ -15,7 +15,7 @@ contract BasicMilestones is MilestonesAbstraction {
   /*
     Set time when it's possible to start adding milestones and when it's not possible.
   */
-  function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyOwner() beforeTime() {
+  function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyParent() beforeTime() {
     startTimestamp = _startTimestamp;
     endTimestamp = _endTimestamp;
   }

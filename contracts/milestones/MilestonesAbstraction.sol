@@ -114,9 +114,4 @@ contract MilestonesAbstraction is Ownable, SafeMath {
       Get milestone by index
     */
     function get(uint index) constant returns (uint, bytes32, bool);
-
-    /*
-      Get milestones sum
-    */
-    function getTotalAmount() constant returns (uint);
 }
