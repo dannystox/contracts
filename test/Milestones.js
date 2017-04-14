@@ -79,7 +79,7 @@ contract('Milestones', () => {
     return Promise.each(milestones, milestone => {
       totalAmount = totalAmount.add(milestone.amount)
     }).then(() => {
-      return milestonesContract.getTotalAmount.call()
+      return milestonesContract.totalAmount.call()
     }).then(amount => {
       return assert.equal(amount.toString(10), totalAmount.toString(10))
     })
