@@ -74,6 +74,8 @@ contract('Token', () => {
 
     return token.allocate.sendTransaction(account, toSend, {
       from: creator
+    }).then(() => {
+      throw new Error('Code had to sent throw')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -82,6 +84,8 @@ contract('Token', () => {
   it('Should doesn\'t allow to send tokens while allocation running', () => {
     return token.transfer.sendTransaction(web3.eth.accounts[1], toSend, {
       from: creator
+    }).then(() => {
+      throw new Error('Code had to sent throw')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -90,6 +94,8 @@ contract('Token', () => {
   it('Should doesn\'t allow to add spender account while allocation running', () => {
     return token.approve.sendTransaction(web3.eth.accounts[1], toSend, {
       from: creator
+    }).then(() => {
+      throw new Error('Code had to sent throw')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -123,6 +129,8 @@ contract('Token', () => {
   it('Should doesnt\' allow to allocate new coins after allocation closed', () => {
     return token.allocate.sendTransaction(web3.eth.accounts[3], new BigNumber(toSend).mul(2), {
       from: creator
+    }).then(() => {
+      throw new Error('Code had to sent throw')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
