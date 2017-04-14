@@ -25,19 +25,37 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     _;
   }
 
+  /*
+    Crowdsale failed
+  */
   modifier isCrowdsaleFailed() {
-    _;
+    var (firstMilestoneAmount, items, completed) = milestones.get(0);
+
+    if (endTimestamp < block.timestamp && milestones.milestonesCount() > 0 && firstMilestoneAmount > totalCollected) {
+      _;
+    } else {
+      throw;
+    }
   }
 
   /*
     Crowdsale completed
   */
   modifier isCrowdsaleCompleted() {
-    if ((endTimestamp != 0 && endTimestamp < block.timestamp) || (cap == true && totalCollected > milestones.totalAmount())) {
-      _;
-    } else {
-      throw;
-    }
+    var (firstMilestoneAmount, items, completed) = milestones.get(0);
+
+    if (
+        (cap == true && totalCollected > milestones.totalAmount()) // если cap достигнут
+        ||
+        (
+          endTimestamp != 0 && endTimestamp < block.timestamp // если время вышло
+          && (milestones.milestonesCount() == 0 || (firstMilestoneAmount < totalCollected)) // есть милестоны или уже собрано больше
+        )
+      ) {
+        _;
+      } else {
+        throw;
+      }
   }
 
   /*
@@ -136,7 +154,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Contract balance
   */
-  uint public contractBalance; 
+  uint public contractBalance;
 
   /*
     Price of token
@@ -171,12 +189,12 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Create tokens for participiant
   */
-  function createTokens(address recipient) payable isCrowdsaleAlive();
+  function createTokens(address recipient) internal isCrowdsaleAlive();
 
   /*
     Set timestamp limitations
   */
-  function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyOwner() isPossibleToModificate();
+  function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyOwner() isPossibleToModificate();
 
   /*
       Vesting
@@ -196,6 +214,16 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Release vesting allocation
   */
   function releaseVestingAllocation() isCrowdsaleCompleted();
+
+  /*
+    Get vesting account
+  */
+  function getVestingAccount(address _account) constant returns (uint, uint, uint);
+
+  /*
+    Get vesting
+  */
+  function getVestingAllocation(address _account, uint _index) constant returns (uint);
 
   /*
     Bonuses

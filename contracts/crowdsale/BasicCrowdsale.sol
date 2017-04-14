@@ -38,22 +38,22 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     createTokens(msg.sender);
   }
 
-  function createTokens(address recipient) payable isCrowdsaleAlive() {
+  function createTokens(address recipient) internal isCrowdsaleAlive() {
     if (msg.value == 0) throw;
 
     uint tokens = safeMul(msg.value, getPrice());
 
-    paritcipiants[msg.sender] = safeAdd(paritcipiants[msg.sender], msg.value);
+    paritcipiants[recipient] = safeAdd(paritcipiants[recipient], msg.value);
 
     totalCollected = safeAdd(totalCollected, msg.value);
-    contractBalance = safeAdd(totalCollected, msg.value);
+    contractBalance = safeAdd(contractBalance, msg.value);
 
     totalSupply = safeAdd(totalSupply, tokens);
     balances[recipient] = safeAdd(balances[recipient], tokens);
   }
 
   function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyOwner() isPossibleToModificate() {
-    if (lockDataTimestamp > startTimestamp || startTimestamp > endTimestamp) {
+    if (lockDataTimestamp > startTimestamp || startTimestamp > endTimestamp || lockDataTimestamp != 0) {
       throw;
     }
 
@@ -145,6 +145,24 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     }
   }
 
+
+  /*
+    Get vesting account
+  */
+  function getVestingAccount(address _account) constant returns (uint, uint, uint) {
+    var vestingAccount = vestingAccounts[_account];
+    return (vestingAccount.payment, vestingAccount.latestAllocation, vestingAccount.allocationsCount);
+  }
+
+  /*
+    Get vesting allocation
+  */
+  function getVestingAllocation(address _account, uint _index) constant returns (uint) {
+    var vestingAccount = vestingAccounts[_account];
+
+    return vestingAccount.allocations[_index];
+  }
+
   function addPriceChange(uint _timestamp, uint _price) onlyOwner() isPossibleToModificate() {
     if (priceChangesLength == 10) {
       throw;
@@ -194,6 +212,8 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
       if (!msg.sender.send(sendBack)) {
         throw;
       }
+
+      balances[msg.sender] = 0;
     } else {
       throw;
     }
