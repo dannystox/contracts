@@ -43,14 +43,14 @@ contract Wings  {
   /*
     Add new project to Wings
   */
-  function addDAO(string _name, bytes32 _infoHash, uint _category, bool _underCap, uint _reviewHours) {
+  function addDAO(string _name, bytes32 _infoHash, bool _underCap, uint _reviewHours) {
     bytes32 _daoId = sha256(_name);
 
     if (daos[_daoId] != address(0)) {
       throw;
     }
 
-    var dao = new DAO(msg.sender, _name, _infoHash, _category, _underCap, _reviewHours, token);
+    var dao = new DAO(msg.sender, _name, _infoHash, _underCap, _reviewHours, token);
 
     daos[_daoId] = dao;
     daosIds[totalDAOsCount++] = _daoId;
@@ -62,13 +62,6 @@ contract Wings  {
   */
   function getDAOById(bytes32 _daoId) constant returns (address _dao) {
     return daos[_daoId];
-  }
-
-  /*
-    Get total count of projects
-  */
-  function getTotalCount() constant returns (uint _count) {
-    return totalDAOsCount;
   }
 
   /*

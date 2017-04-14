@@ -25,7 +25,6 @@ contract('DAO', () => {
       owner: creator,
       name: "Wings Awesome DAO",
       infoHash: '0x' + crypto.randomBytes(32).toString('hex'),
-      category: chance.integer({min: 0, max: 5}),
       underCap: false,
       reviewHours: chance.integer({min: 1, max: 504 }),
       forecastHours: chance.integer({min: 120, max: 720 }),
@@ -48,7 +47,7 @@ contract('DAO', () => {
     }).then(_token => {
       token = _token
 
-      return DAO.new(daoInfo.owner, daoInfo.name, daoInfo.infoHash, daoInfo.category, daoInfo.underCap, daoInfo.reviewHours, token.address,  {
+      return DAO.new(daoInfo.owner, daoInfo.name, daoInfo.infoHash, daoInfo.underCap, daoInfo.reviewHours, token.address,  {
         from: creator
       })
     }).then(_dao => {
@@ -62,17 +61,13 @@ contract('DAO', () => {
 
   it('Should allow to update DAO info before start', () => {
     daoInfo.infoHash = '0x' + crypto.randomBytes(32).toString('hex')
-    daoInfo.category = chance.integer({min: 0, max: 5})
 
-    return dao.update.sendTransaction(daoInfo.infoHash, daoInfo.category, {
+    return dao.update.sendTransaction(daoInfo.infoHash, {
       from: creator
     }).then(() => {
       return dao.infoHash.call()
     }).then(infoHash => {
       assert.equal(infoHash, daoInfo.infoHash)
-      return dao.category.call()
-    }).then(category => {
-      assert.equal(category, daoInfo.category)
     })
   })
 
@@ -251,18 +246,13 @@ contract('DAO', () => {
 
   it('Should allow to change project data while it is in review mode', () => {
     daoInfo.infoHash = '0x' + crypto.randomBytes(32).toString('hex')
-    daoInfo.category = chance.integer({min: 0, max: 5})
 
-
-    return dao.update.sendTransaction(daoInfo.infoHash, daoInfo.category, {
+    return dao.update.sendTransaction(daoInfo.infoHash, {
       from: creator
     }).then(() => {
       return dao.infoHash.call()
     }).then(infoHash => {
       assert.equal(infoHash, daoInfo.infoHash)
-      return dao.category.call()
-    }).then(category => {
-      assert.equal(category, daoInfo.category)
     })
   })
 
@@ -300,9 +290,8 @@ contract('DAO', () => {
 
   it('Should doesnt allow to update DAO', () => {
     const infoHash = '0x' + crypto.randomBytes(32).toString('hex')
-    const category = chance.integer({min: 0, max: 5})
 
-    return dao.update.sendTransaction(infoHash, category, {
+    return dao.update.sendTransaction(infoHash, {
       from: creator
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)

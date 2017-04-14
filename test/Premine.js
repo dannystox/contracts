@@ -86,7 +86,9 @@ contract('Token/Premine', () => {
   })
 
   it('Shouldnt allow to add same preminer two times', () => {
-    return token.addPreminer.sendTransaction(preminers[0].address, preminers[0].balance, preminers[0].payment).catch(err => {
+    return token.addPreminer.sendTransaction(preminers[0].address, preminers[0].balance, preminers[0].payment).then(() => {
+      throw new Error('Code had to sent throw')
+    }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
   })
@@ -129,6 +131,8 @@ contract('Token/Premine', () => {
   it('Shouldn\'t allow to preminer after allocation closed', () => {
     return token.addPreminer.sendTransaction(preminer.address, preminer.balance, preminer.payment, {
       from: creator
+    }).then(() => {
+      throw new Error('Code had to sent throw')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
