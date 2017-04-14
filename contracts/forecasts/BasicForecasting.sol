@@ -29,7 +29,7 @@ contract BasicForecasting is ForecastingAbstraction {
   function add(uint _amount, bytes32 _message) inTime() {
     if (cap) {
         if (max == 0) {
-          max = milestones.getTotalAmount();
+          max = milestones.totalAmount();
         }
 
         if (max < _amount) {
