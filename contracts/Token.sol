@@ -50,7 +50,7 @@ contract Token is StandardToken, Ownable {
   /*
     Total supply
   */
-  uint public totalSupply = 100000000000000000000000000;
+  uint public totalSupply = 10**26;//100000000000000000000000000;
 
   /*
     How many accounts allocated?
