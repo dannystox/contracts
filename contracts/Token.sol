@@ -14,14 +14,14 @@ import "./zeppelin/token/StandardToken.sol";
 */
 contract Token is StandardToken, Ownable {
   // Account allocation event
-  event Allocation(address indexed account, uint amount);
+  event ALLOCATION(address indexed account, uint amount);
 
   /*
     Premine events
   */
-  event PreminerAdded(address indexed account, uint amount);
-  event PremineAllocationAdded(address indexed account, uint time);
-  event PremineRelease(address indexed account, uint timestamp, uint amount);
+  event PREMINER_ADDED(address indexed account, uint amount);
+  event PREMINE_ALLOCATION_ADDED(address indexed account, uint time);
+  event PREMINE_RELEASE(address indexed account, uint timestamp, uint amount);
 
   /*
     Premine structure
@@ -110,7 +110,7 @@ contract Token is StandardToken, Ownable {
     balances[user] = balance;
 
     accountsToAllocate--;
-    Allocation(user, balance);
+    ALLOCATION(user, balance);
   }
 
   /*
@@ -147,7 +147,7 @@ contract Token is StandardToken, Ownable {
     balances[preminer] = safeAdd(balances[preminer], initialBalance);
     preminers[preminer] = premine;
     accountsToAllocate--;
-    PreminerAdded(preminer, initialBalance);
+    PREMINER_ADDED(preminer, initialBalance);
   }
 
   /*
@@ -169,7 +169,7 @@ contract Token is StandardToken, Ownable {
     }
 
     preminer.allocations[preminer.allocationsCount++] = _time;
-    PremineAllocationAdded(_preminer, _time);
+    PREMINE_ALLOCATION_ADDED(_preminer, _time);
   }
 
   /*
@@ -209,7 +209,7 @@ contract Token is StandardToken, Ownable {
         balances[preminer.account] = safeAdd(balances[preminer.account], preminer.monthlyPayment);
         preminer.latestAllocation = i;
 
-        PremineRelease(preminer.account, preminer.monthlyPayment, preminer.allocations[i]);
+        PREMINE_RELEASE(preminer.account, preminer.monthlyPayment, preminer.allocations[i]);
         preminer.allocations[i] = 0;
       } else {
         break;
