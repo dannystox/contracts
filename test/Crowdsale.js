@@ -554,14 +554,13 @@ contract('Crowdsale', () => {
     }).then(() => {
       throw new Error('Shouldnt be here')
     }).catch(err => {
-      console.log(err)
       assert.equal(errors.isJump(err.message), true)
     })
   })
 
   it('Should move time to vesting allocation completed and release rest of vesting tokens', () => {
     return time.blockchainTime(web3).then(blockchainTime => {
-      const timestamp = timestamps[timestamps.length-1]
+      const timestamp = timestamps[timestamps.length-1] + 3600
       const seconds = timestamp - blockchainTime
 
       return time.move(web3, seconds)
