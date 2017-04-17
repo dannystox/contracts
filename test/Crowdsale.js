@@ -108,7 +108,7 @@ contract('Crowdsale', () => {
         from: web3.eth.accounts[0],
         to: crowdsale.address,
         value: web3.toWei(1, 'ether'),
-        gas: 90000
+        gas: 130000
       }, (err) => {
         err? reject(err) : resolve()
       })
@@ -291,7 +291,7 @@ contract('Crowdsale', () => {
         from: web3.eth.accounts[0],
         to: crowdsale.address,
         value: web3.toWei(1, 'ether'),
-        gas: 90000
+        gas: 130000
       }, (err) => {
         err? reject(err) : resolve()
       })
@@ -329,7 +329,7 @@ contract('Crowdsale', () => {
       account: web3.eth.accounts[3],
       initial: web3.toWei(100, 'ether'),
       payment: web3.toWei(50, 'ether'),
-      gas: 90000
+      gas: 130000
     }
 
     return crowdsale.addVestingAccount(vestingAccount.account, vestingAccount.initial, vestingAccount.payment).then(() => {
@@ -483,7 +483,7 @@ contract('Crowdsale', () => {
         from: web3.eth.accounts[6],
         to: crowdsale.address,
         value: web3.toWei(1, 'ether'),
-        gas: 90000
+        gas: 130000
       }, (err) => {
         err? reject(err) : resolve()
       })
