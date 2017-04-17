@@ -13,7 +13,7 @@ const errors = require('../helpers/errors')
 const time = require('../helpers/time')
 const miner = require('../helpers/miner')
 
-contract('Crowdsale', () => {
+contract('CrowdsaleFailed', () => {
   const creator = web3.eth.accounts[0]
   let chance = new Chance()
 
