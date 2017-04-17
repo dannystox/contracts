@@ -5,14 +5,6 @@ import "../milestones/MilestonesAbstraction.sol";
 import "../forecasts/ForecastingAbstraction.sol";
 import "../zeppelin/Ownable.sol";
 
-/*
-  ToDo:
-    - Pre-mine allocation +
-    - User reward allocation +
-    - Price based on time
-    - Check timestamps verifications
-    - Complete payback with verification that crowdsale failed
-*/
 contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Check cap
@@ -61,11 +53,11 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     var (firstMilestoneAmount, items, completed) = milestones.get(0);
 
     if (
-        (cap == true && totalCollected > milestones.totalAmount()) // если cap достигнут
+        (cap == true && totalCollected >= milestones.totalAmount())
         ||
         (
-          endTimestamp != 0 && endTimestamp < block.timestamp // если время вышло
-          && (milestones.milestonesCount() == 0 || (firstMilestoneAmount < totalCollected)) // есть милестоны или уже собрано больше
+          endTimestamp != 0 && endTimestamp < block.timestamp
+          && (milestones.milestonesCount() == 0 || (firstMilestoneAmount < totalCollected))
         )
       ) {
         _;
