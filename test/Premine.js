@@ -11,6 +11,7 @@ contract('Token/Premine', () => {
   const toSend = web3.toWei(100, 'ether')
   const preminer = {
     "address": "0x8f9318230e6c4d416a0ad9bb9ce105bb74170b93",
+    "recipient": "0x8f9318230e6c4d416a0ad9bb9ce105bb74170c93",
     "balance": "1031666670000000000000000",
     "payment": "104166660000000000000000",
     "duration": 26
@@ -39,6 +40,7 @@ contract('Token/Premine', () => {
 
     preminers = [{
       "address": web3.eth.accounts[0],
+      "recipient": web3.eth.accounts[1],
       "balance": premine.balance,
       "payment": premine.payment,
       "total": premine.total
@@ -64,12 +66,12 @@ contract('Token/Premine', () => {
 
   it('Should add preminer to preminers list and allocate initial balance', () => {
     return Promise.each(preminers, (preminer) => {
-      return token.addPreminer.sendTransaction(preminer.address, preminer.balance, preminer.payment, {
+      return token.addPreminer(preminer.address, preminer.recipient, preminer.balance, preminer.payment, {
         from: creator
       })
     }).then((txId) => {
       return Promise.each(preminers, (preminer) => {
-        return token.balanceOf.call(preminer.address).then(balance => {
+        return token.balanceOf.call(preminer.recipient).then(balance => {
           assert.equal(balance.toString(10), preminer.balance)
         })
       })
@@ -86,7 +88,7 @@ contract('Token/Premine', () => {
   })
 
   it('Shouldnt allow to add same preminer two times', () => {
-    return token.addPreminer.sendTransaction(preminers[0].address, preminers[0].balance, preminers[0].payment).then(() => {
+    return token.addPreminer(preminers[0].address, preminers[0].recipient, preminers[0].balance, preminers[0].payment).then(() => {
       throw new Error('Code had to sent throw')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
@@ -128,8 +130,8 @@ contract('Token/Premine', () => {
     })
   })
 
-  it('Shouldn\'t allow to preminer after allocation closed', () => {
-    return token.addPreminer.sendTransaction(preminer.address, preminer.balance, preminer.payment, {
+  it('Shouldn\'t allow to add new preminer after allocation closed', () => {
+    return token.addPreminer(preminer.address, preminer.recipient, preminer.balance, preminer.payment, {
       from: creator
     }).then(() => {
       throw new Error('Code had to sent throw')
@@ -141,18 +143,18 @@ contract('Token/Premine', () => {
   it('Shouldn\'n allow to release new portion of premine now', () => {
     const preminerOne = preminers[0]
 
-    return token.balanceOf.call(preminerOne.address).then((balance) => {
+    return token.balanceOf.call(preminerOne.recipient).then((balance) => {
       return token.releasePremine.sendTransaction({
         from: creator
       }).then(() => balance)
     }).then((balance) => {
-      return token.balanceOf.call(preminerOne.address).then((_balance) => {
+      return token.balanceOf.call(preminerOne.recipient).then((_balance) => {
         assert.equal(balance.toString(10), _balance.toString(10))
       })
     })
   })
 
-  it('Should add new premine after each month', () => {
+  it('Should release new premine portion after each month', () => {
     const monthlySeconds = 2678500
 
     return Promise.each(preminers, (preminer) => {
@@ -176,7 +178,7 @@ contract('Token/Premine', () => {
       }
 
       return start(0).then(() => {
-        return token.balanceOf(preminer.address)
+        return token.balanceOf(preminer.recipient)
       }).then(balance => {
         assert.equal(balance.toString(10), preminer.total)
       })
@@ -188,11 +190,11 @@ contract('Token/Premine', () => {
 
     return time.move(web3, monthlySeconds).then(() => {
       return Promise.each(preminers, (preminer) => {
-        return token.balanceOf(preminer.address).then((balance) => {
+        return token.balanceOf(preminer.recipient).then((balance) => {
           return token.releasePremine.sendTransaction({
             from: preminer.address
           }).then(() => {
-            return token.balanceOf(preminer.address)
+            return token.balanceOf(preminer.recipient)
           }).then(newBalance => {
             assert.equal(newBalance.toString(10), balance.toString(10))
           })
@@ -203,11 +205,17 @@ contract('Token/Premine', () => {
 
   it('Should allow to send user premine to another account', () => {
     return token.transfer.sendTransaction(preminer.address, preminers[0].total, {
-      from: preminers[0].address
+      from: preminers[0].recipient
     }).then(() => {
       return token.balanceOf(preminer.address)
     }).then((balance) => {
       assert.equal(balance.toString(10), preminers[0].total)
+    })
+  })
+
+  it('Should contains zero tokens at premine creator account', () => {
+    return token.balanceOf.call(preminers[0].address).then(balance => {
+      assert.equal(balance.toNumber(), 0)
     })
   })
 

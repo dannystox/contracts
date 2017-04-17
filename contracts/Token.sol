@@ -19,7 +19,7 @@ contract Token is StandardToken, Ownable {
   /*
     Premine events
   */
-  event PREMINER_ADDED(address indexed account, uint amount);
+  event PREMINER_ADDED(address indexed owner, address account, uint amount);
   event PREMINE_ALLOCATION_ADDED(address indexed account, uint time);
   event PREMINE_RELEASE(address indexed account, uint timestamp, uint amount);
 
@@ -146,19 +146,19 @@ contract Token is StandardToken, Ownable {
   /*
     Add pre-mine account
   */
-  function addPreminer(address preminer, uint initialBalance, uint monthlyPayment) onlyOwner() whenAllocation(true) whenPremineHasntAllocated(preminer) {
+  function addPreminer(address preminer, address recipient, uint initialBalance, uint monthlyPayment) onlyOwner() whenAllocation(true) whenPremineHasntAllocated(preminer) {
     var premine = Preminer(
-        preminer,
+        recipient,
         monthlyPayment,
         0,
         0
       );
 
 
-    balances[preminer] = safeAdd(balances[preminer], initialBalance);
+    balances[recipient] = safeAdd(balances[recipient], initialBalance);
     preminers[preminer] = premine;
     accountsToAllocate--;
-    PREMINER_ADDED(preminer, initialBalance);
+    PREMINER_ADDED(preminer, premine.account, initialBalance);
   }
 
   /*
@@ -194,10 +194,10 @@ contract Token is StandardToken, Ownable {
   /*
     Get preminer
   */
-  function getPreminer(address _preminer) constant returns (uint, uint, uint) {
+  function getPreminer(address _preminer) constant returns (address, uint, uint, uint) {
     var preminer = preminers[_preminer];
 
-    return (preminer.monthlyPayment, preminer.latestAllocation, preminer.allocationsCount);
+    return (preminer.account, preminer.monthlyPayment, preminer.latestAllocation, preminer.allocationsCount);
   }
 
   /*
