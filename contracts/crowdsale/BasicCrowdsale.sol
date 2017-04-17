@@ -34,11 +34,11 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
       rewardPercent = _rewardPercent;
   }
 
-  function () payable isCrowdsaleAlive() {
+  function () payable isCrowdsaleAlive() checkCap() {
     createTokens(msg.sender);
   }
 
-  function createTokens(address recipient) internal isCrowdsaleAlive() {
+  function createTokens(address recipient) internal isCrowdsaleAlive() checkCap() {
     if (msg.value == 0) throw;
 
     uint tokens = safeMul(msg.value, getPrice());
@@ -182,11 +182,8 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
   /*
     Here we giving reward to account in percents
   */
-  function giveReward(address _account, uint _percent) onlyForecasting() isCrowdsaleCompleted() {
-    uint totalRewardAmount = safeMul(totalSupply, rewardPercent) / 100;
-    uint reward = safeMul(totalRewardAmount, _percent) / 100;
-
-    balances[_account] = safeAdd(balances[_account], reward);
+  function giveReward(address _account, uint _amount) onlyForecasting() isCrowdsaleCompleted() {
+    balances[_account] = safeAdd(balances[_account], _amount);
   }
 
   /*
@@ -213,7 +210,6 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
         throw;
       }
 
-      balances[msg.sender] = 0;
     } else {
       throw;
     }

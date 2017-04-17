@@ -8,12 +8,28 @@ import "../zeppelin/Ownable.sol";
 /*
   ToDo:
     - Pre-mine allocation +
-    - User reward allocation
+    - User reward allocation +
     - Price based on time
     - Check timestamps verifications
     - Complete payback with verification that crowdsale failed
 */
 contract CrowdsaleAbstraction is StandardToken, Ownable {
+  /*
+    Check cap
+  */
+  modifier checkCap() {
+    if (cap == true) {
+      uint afterFund = safeAdd(msg.value, totalCollected);
+      if (afterFund <= milestones.totalAmount()) {
+        _;
+      } else {
+        throw;
+      }
+    } else {
+      _;
+    }
+  }
+
   /*
     It's possible to change condition
   */
@@ -189,7 +205,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Create tokens for participiant
   */
-  function createTokens(address recipient) internal isCrowdsaleAlive();
+  function createTokens(address recipient) internal isCrowdsaleAlive() checkCap();
 
   /*
     Set timestamp limitations
@@ -242,7 +258,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Give reward to forecaster based on percent from reward percent
   */
-  function giveReward(address _account, uint _percent) onlyForecasting() isCrowdsaleCompleted();
+  function giveReward(address _account, uint _amount) onlyForecasting() isCrowdsaleCompleted();
 
   /*
     ETH functions (Payable)
