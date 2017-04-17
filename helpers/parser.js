@@ -46,9 +46,10 @@ const commentFields = {
 }
 
 const preminerFields = {
-  0: 'payment',
-  1: 'latestAllocation',
-  2: 'allocationsCount'
+  0: 'recipient',
+  1: 'payment',
+  2: 'latestAllocation',
+  3: 'allocationsCount'
 }
 
 const internalParser = (arr, fields) => {
