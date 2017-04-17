@@ -35,12 +35,12 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
   }
 
   function () payable isCrowdsaleAlive() checkCap() {
+    if (msg.value == 0) throw;
+
     createTokens(msg.sender);
   }
 
   function createTokens(address recipient) internal isCrowdsaleAlive() checkCap() {
-    if (msg.value == 0) throw;
-
     uint tokens = safeMul(msg.value, getPrice());
 
     paritcipiants[recipient] = safeAdd(paritcipiants[recipient], msg.value);
