@@ -3,20 +3,12 @@ pragma solidity ^0.4.2;
 import "./zeppelin/Ownable.sol";
 import "./milestones/MilestonesAbstraction.sol";
 import "./forecasts/ForecastingAbstraction.sol";
+import "./crowdsales/CrowdsaleAbstraction.sol";
 
 contract DAOAbstraction is Ownable {
-  /*
-    Projects Periods
-  */
-  enum ProjectPeriod {
-    Review,
-    Forecasting,
-    Funding,
-    AfterFunding
-  }
-
   bytes32 public id; // id of project
   string public name; // name of project
+  string public symbol; // symbol of project
   bytes32 public infoHash; // information hash of project
 
   address public token; // token contract address
@@ -26,6 +18,8 @@ contract DAOAbstraction is Ownable {
   uint public reviewHours; // review period of project
   uint public forecastHours; // forecasting hours
 
+  uint public rewardPercent; // reward percent
+
   bool public underCap; // is project under cap and latest milestone is cap
   uint public startTimestamp; // time of DAO start activity
 
@@ -34,6 +28,7 @@ contract DAOAbstraction is Ownable {
   */
   MilestonesAbstraction public milestones;
   ForecastingAbstraction public forecasting;
+  CrowdsaleAbstraction public crowdsale;
 
   modifier isStarted(bool _value) {
     if (_value == true) {
@@ -48,22 +43,6 @@ contract DAOAbstraction is Ownable {
       } else {
         throw;
       }
-    }
-  }
-
-  modifier onlyReview() {
-    if (startTimestamp == 0 || (block.timestamp < (startTimestamp + (reviewHours * 1 hours)))) {
-      _;
-    } else {
-      throw;
-    }
-  }
-
-  modifier onlyForecasting() {
-    if (block.timestamp < (startTimestamp + (reviewHours + forecastHours) * 1 hours)) {
-      _;
-    } else {
-      throw;
     }
   }
 
@@ -83,6 +62,22 @@ contract DAOAbstraction is Ownable {
     _;
   }
 
+  modifier checkCrowdsaleHours(uint _hours) {
+    if (_hours < 168 || _hours > 2016) {
+      throw;
+    }
+
+    _;
+  }
+
+  modifier onlyReview() {
+   if (startTimestamp == 0 || (block.timestamp < (startTimestamp + (reviewHours * 1 hours)))) {
+     _;
+   } else {
+     throw;
+   }
+ }
+
   /*
     Update project data
   */
@@ -91,5 +86,11 @@ contract DAOAbstraction is Ownable {
   /*
     Start DAO process
   */
-  function start(uint _forecastHours, uint _rewardPercent) onlyOwner() isStarted(false) checkForecastHours(_forecastHours);
+  function start(
+    uint _forecastHours,
+    uint _crowdsaleHours,
+    address _multisig,
+    uint _initialPrice,
+    uint _rewardPercent) onlyOwner() isStarted(false) checkForecastHours(_forecastHours) checkCrowdsaleHours(_crowdsaleHours);
+
 }

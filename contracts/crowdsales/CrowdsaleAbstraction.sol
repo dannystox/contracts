@@ -2,10 +2,20 @@ pragma solidity ^0.4.2;
 
 import "../zeppelin/token/StandardToken.sol";
 import "../milestones/MilestonesAbstraction.sol";
-import "../forecasts/ForecastingAbstraction.sol";
 import "../zeppelin/Ownable.sol";
 
 contract CrowdsaleAbstraction is StandardToken, Ownable {
+  /*
+    Only parent
+  */
+  modifier onlyParent() {
+    if (msg.sender != parent) {
+      throw;
+    }
+
+    _;
+  }
+
   /*
     Check cap
   */
@@ -128,6 +138,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Owner of crowdsale
   */
   address public owner;
+  address public parent;
 
   /*
     Multisignature account
@@ -142,7 +153,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Contract where forecasting placed
   */
-  ForecastingAbstraction public forecasting;
+  address public forecasting;
 
   /*
     Total collected amount
@@ -192,7 +203,12 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Set timestamp limitations
   */
-  function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyOwner() isPossibleToModificate();
+  function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyParent() isPossibleToModificate();
+
+  /*
+    Set forecasting contract
+  */
+  function setForecasting(address _forecasting) onlyParent() isPossibleToModificate();
 
   /*
       Vesting

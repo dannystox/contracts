@@ -66,7 +66,7 @@ contract ForecastingAbstraction is Ownable {
     Milestones
   */
   MilestonesAbstraction public milestones;
-
+  address public crowdsale;
 
   /*
     Max forecast amount

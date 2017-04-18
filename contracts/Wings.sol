@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.8;
 
 import "./DAOAbstraction.sol";
 import "./DAO.sol";
@@ -43,14 +43,14 @@ contract Wings  {
   /*
     Add new project to Wings
   */
-  function addDAO(string _name, bytes32 _infoHash, bool _underCap, uint _reviewHours) {
+  function addDAO(string _name, string _symbol, bytes32 _infoHash, bool _underCap, uint _reviewHours) {
     bytes32 _daoId = sha256(_name);
 
     if (daos[_daoId] != address(0)) {
       throw;
     }
 
-    var dao = new DAO(msg.sender, _name, _infoHash, _underCap, _reviewHours, token);
+    var dao = new DAO(msg.sender, _name, _symbol, _infoHash, _underCap, _reviewHours, token);
 
     daos[_daoId] = dao;
     daosIds[totalDAOsCount++] = _daoId;

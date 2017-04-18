@@ -2,7 +2,6 @@ pragma solidity ^0.4.2;
 
 import "./CrowdsaleAbstraction.sol";
 import "../milestones/BasicMilestones.sol";
-import "../forecasts/BasicForecasting.sol";
 
 /*
   Basic Crodwsale Class
@@ -13,18 +12,18 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
   */
   function BasicCrowdsale(
     address _owner,
+    address _parent,
     address _multisig,
     string _name,
     string _symbol,
     address _milestones,
-    address _forecasting,
     uint _price,
     uint _rewardPercent) {
       owner = _owner;
+      parent = _parent;
       name = _name;
       symbol = _symbol;
       milestones = BasicMilestones(_milestones);
-      forecasting = BasicForecasting(_forecasting);
       price = _price;
       multisig = _multisig;
       cap = milestones.cap();
@@ -57,6 +56,10 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     lockDataTimestamp = _lockDataTimestamp;
     startTimestamp = _startTimestamp;
     endTimestamp = _endTimestamp;
+  }
+
+  function setForecasting(address _forecasting) onlyParent() isPossibleToModificate() {
+    forecasting = _forecasting;
   }
 
   function getPrice() constant returns (uint result) {

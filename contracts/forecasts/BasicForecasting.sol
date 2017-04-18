@@ -7,18 +7,20 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Lock tokens here in forecast contract?
   */
-
   function BasicForecasting(uint _startTimestamp,
                            uint _endTimestamp,
                            uint _rewardPercent,
                            address _token,
                            address _milestones,
+                           address _crowdsale,
                            bool _cap) checkRewardPercent(_rewardPercent) {
     startTimestamp = _startTimestamp;
     endTimestamp = _endTimestamp;
     rewardPercent = _rewardPercent;
     token = Token(_token);
     milestones = BasicMilestones(_milestones);
+    crowdsale = _crowdsale;
+
     cap = _cap;
   }
 
