@@ -37,9 +37,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Crowdsale failed
   */
   modifier isCrowdsaleFailed() {
-    var (firstMilestoneAmount, items, completed) = milestones.get(0);
-
-    if (endTimestamp < block.timestamp && milestones.milestonesCount() > 0 && firstMilestoneAmount > totalCollected) {
+    if (endTimestamp < block.timestamp && isMinimalReached() == false) {
       _;
     } else {
       throw;
@@ -50,16 +48,9 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Crowdsale completed
   */
   modifier isCrowdsaleCompleted() {
-    var (firstMilestoneAmount, items, completed) = milestones.get(0);
+    bool inTime = endTimestamp != 0 && endTimestamp < block.timestamp;
 
-    if (
-        (cap == true && totalCollected >= milestones.totalAmount())
-        ||
-        (
-          endTimestamp != 0 && endTimestamp < block.timestamp
-          && (milestones.milestonesCount() == 0 || (firstMilestoneAmount < totalCollected))
-        )
-      ) {
+    if (isCapReached() == true || (inTime == true && isMinimalReached() == true)) {
         _;
       } else {
         throw;
@@ -70,8 +61,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Crowdsale alive
   */
   modifier isCrowdsaleAlive() {
-    if ((startTimestamp < block.timestamp && endTimestamp > block.timestamp)
-      || (cap == true && totalCollected < milestones.totalAmount()) ) {
+    if ((startTimestamp < block.timestamp && endTimestamp > block.timestamp) && isCapReached() == false) {
         _;
     } else {
       throw;
@@ -265,4 +255,14 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
     Payback (only if crowdsale is not success)
   */
   function payback() payable isCrowdsaleFailed();
+
+  /*
+    Is cap reached (if there is cap)
+  */
+  function isCapReached() constant returns (bool);
+
+  /*
+    Is minimal goal reached (if there is minimal goal)
+  */
+  function isMinimalReached() constant returns (bool);
 }

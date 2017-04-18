@@ -214,4 +214,21 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
       throw;
     }
   }
+
+
+  /*
+    Is cap reached (if there is cap)
+  */
+  function isCapReached() constant returns (bool) {
+    return cap == true && totalCollected >= milestones.totalAmount();
+  }
+
+  /*
+    Is minimal goal reached (if there is minimal goal)
+  */
+  function isMinimalReached() constant returns (bool) {
+    var (firstMilestoneAmount, items, completed) = milestones.get(0);
+
+    return milestones.milestonesCount() == 0 || firstMilestoneAmount <= totalCollected;
+  }
 }
