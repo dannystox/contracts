@@ -1,11 +1,11 @@
-/*
-  Basic milestones contract
-*/
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.8;
 
 import "../zeppelin/Ownable.sol";
 import "../zeppelin/SafeMath.sol";
 
+/*
+  Basic milestones contract
+*/
 contract MilestonesAbstraction is Ownable, SafeMath {
     modifier onlyParent() {
       if (msg.sender == parent) {

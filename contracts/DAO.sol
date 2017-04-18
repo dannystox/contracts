@@ -1,4 +1,4 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.8;
 
 import "./DAOAbstraction.sol";
 import "./milestones/BasicMilestones.sol";
@@ -45,7 +45,7 @@ contract DAO is DAOAbstraction {
       forecastHours = _forecastHours;
 
       uint _startTimestamp = startTimestamp + (reviewHours * 1 hours);
-      uint _endTimestamp = _startTimestamp + _forecastHours * 1 hours;
+      uint _endTimestamp = _startTimestamp + (_forecastHours * 1 hours);
 
       crowdsale = new BasicCrowdsale(msg.sender, this, _multisig, name, symbol, milestones, _initialPrice, rewardPercent);
       forecasting = new BasicForecasting(_startTimestamp, _endTimestamp, rewardPercent, token, milestones, crowdsale, underCap);

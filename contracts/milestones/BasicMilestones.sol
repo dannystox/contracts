@@ -1,10 +1,10 @@
-/*
-  Basic Milestone implementation
-*/
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.8;
 
 import "./MilestonesAbstraction.sol";
 
+/*
+  Basic Milestone implementation
+*/
 contract BasicMilestones is MilestonesAbstraction {
   function BasicMilestones(address _owner, bool _cap) {
     owner = _owner;
