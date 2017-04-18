@@ -5,10 +5,7 @@ import "../milestones/BasicMilestones.sol";
 import "../forecasts/BasicForecasting.sol";
 
 /*
-  ToDo:
-    - Two mode of creating tokens
-    - Time bonuses / Price changing
-    - Withdrawal allowing only if milestones completed
+  Basic Crodwsale Class
 */
 contract BasicCrowdsale is CrowdsaleAbstraction {
   /*
