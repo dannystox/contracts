@@ -206,6 +206,8 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     uint sendBack = paritcipiants[msg.sender];
 
     if (sendBack > 0) {
+      paritcipiants[msg.sender] = 0;
+      
       if (!msg.sender.send(sendBack)) {
         throw;
       }
