@@ -3,7 +3,7 @@ pragma solidity ^0.4.8;
 import "./zeppelin/Ownable.sol";
 import "./milestones/MilestonesAbstraction.sol";
 import "./forecasts/ForecastingAbstraction.sol";
-import "./crowdsales/CrowdsaleAbstraction.sol";
+import "./crowdsales/BasicCrowdsale.sol";
 
 contract DAOAbstraction is Ownable {
   bytes32 public id; // id of project
@@ -28,7 +28,7 @@ contract DAOAbstraction is Ownable {
   */
   MilestonesAbstraction public milestones;
   ForecastingAbstraction public forecasting;
-  CrowdsaleAbstraction public crowdsale;
+  BasicCrowdsale public crowdsale;
 
   modifier isStarted(bool _value) {
     if (_value == true) {
@@ -85,12 +85,13 @@ contract DAOAbstraction is Ownable {
 
   /*
     Start DAO process
+    //onlyOwner() isStarted(false) checkForecastHours(_forecastHours) checkCrowdsaleHours(_crowdsaleHours)
   */
   function start(
     uint _forecastHours,
     uint _crowdsaleHours,
     address _multisig,
     uint _initialPrice,
-    uint _rewardPercent) onlyOwner() isStarted(false) checkForecastHours(_forecastHours) checkCrowdsaleHours(_crowdsaleHours);
+    uint _rewardPercent) onlyOwner() isStarted(false);
 
 }

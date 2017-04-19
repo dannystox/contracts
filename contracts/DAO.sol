@@ -3,7 +3,6 @@ pragma solidity ^0.4.8;
 import "./DAOAbstraction.sol";
 import "./milestones/BasicMilestones.sol";
 import "./forecasts/BasicForecasting.sol";
-import "./crowdsales/BasicCrowdsale.sol";
 
 contract DAO is DAOAbstraction {
   function DAO(
@@ -13,7 +12,7 @@ contract DAO is DAOAbstraction {
       bytes32 _infoHash,
       bool _underCap,
       uint _reviewHours,
-      address _token) checkReviewHours(_reviewHours) {
+      address _token) checkReviewHours(_reviewHours)  {
         owner = _owner;
         id = sha256(_name);
         name = _name;
@@ -30,13 +29,14 @@ contract DAO is DAOAbstraction {
   /*
     Start DAO process
   */
+  //onlyOwner() isStarted(false) checkForecastHours(_forecastHours) checkCrowdsaleHours(_crowdsaleHours)
   function start(
       uint _forecastHours,
       uint _crowdsaleHours,
       address _multisig,
       uint _initialPrice,
       uint _rewardPercent
-    ) onlyOwner() isStarted(false) checkForecastHours(_forecastHours) checkCrowdsaleHours(_crowdsaleHours) {
+    ) onlyOwner() isStarted(false) checkForecastHours(_forecastHours) {
       if (underCap && milestones.milestonesCount() < 1) {
         throw;
       }
@@ -47,8 +47,8 @@ contract DAO is DAOAbstraction {
       uint _startTimestamp = startTimestamp + (reviewHours * 1 hours);
       uint _endTimestamp = _startTimestamp + (_forecastHours * 1 hours);
 
-      crowdsale = new BasicCrowdsale(msg.sender, this, _multisig, name, symbol, milestones, _initialPrice, rewardPercent);
-      forecasting = new BasicForecasting(_startTimestamp, _endTimestamp, rewardPercent, token, milestones, crowdsale, underCap);
+      crowdsale = new BasicCrowdsale(msg.sender, address(0), _multisig, name, symbol, milestones, _initialPrice, _rewardPercent);
+      forecasting = new BasicForecasting(_startTimestamp, _endTimestamp, rewardPercent, token, milestones, address(0), underCap);
 
       crowdsale.setForecasting(forecasting);
       crowdsale.setLimitations(_startTimestamp, _endTimestamp, (_endTimestamp + (_crowdsaleHours * 1 hours)));

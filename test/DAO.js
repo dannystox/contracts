@@ -24,6 +24,7 @@ contract('DAO', () => {
     daoInfo = {
       owner: creator,
       name: "Wings Awesome DAO",
+      symbol: "WINGS",
       infoHash: '0x' + crypto.randomBytes(32).toString('hex'),
       underCap: false,
       reviewHours: chance.integer({min: 1, max: 504 }),
@@ -47,10 +48,11 @@ contract('DAO', () => {
     }).then(_token => {
       token = _token
 
-      return DAO.new(daoInfo.owner, daoInfo.name, daoInfo.infoHash, daoInfo.underCap, daoInfo.reviewHours, token.address,  {
+      return DAO.new(daoInfo.owner, daoInfo.name, daoInfo.symbol, daoInfo.infoHash, daoInfo.underCap, daoInfo.reviewHours, token.address,  {
         from: creator
       })
     }).then(_dao => {
+      console.log('got dao')
       dao = _dao
       return dao.owner.call()
     }).then(owner => {

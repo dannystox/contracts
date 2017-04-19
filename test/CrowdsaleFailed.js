@@ -34,6 +34,8 @@ contract('CrowdsaleFailed', () => {
 
   before('Contract Creation', () => {
     let now = new Date()
+    rewardPercent = chance.integer({min: 1, max: 100000000 })
+
     now.setHours(1,0,0,0)
 
     for (let i = 0; i < vestingMonthes; i++) {
@@ -75,9 +77,23 @@ contract('CrowdsaleFailed', () => {
         return milestones.setLimitations.sendTransaction(milestoneStartTime, milestoneEndTime)
       })
     }).then(() => {
+      multisig = web3.eth.accounts[1]
+
+      return Crowdsale.new(
+        creator,
+        creator,
+        multisig,
+        "Wings",
+        "WINGS",
+        milestones.address,
+        10,
+        rewardPercent
+      )
+    }).then(_crowdsale => {
+      crowdsale = _crowdsale
+
       const forecastingStartTime = startTime + 3600
       const forecastingEndTime = startTime + 7200
-      rewardPercent = chance.integer({min: 1, max: 100000000 })
 
       return Forecasting.new(
         forecastingStartTime,
@@ -85,24 +101,13 @@ contract('CrowdsaleFailed', () => {
         rewardPercent,
         '0x0',
         milestones.address,
+        crowdsale.address,
         false
       )
     }).then(_forecasting => {
       forecasting = _forecasting
-      multisig = web3.eth.accounts[1]
 
-      return Crowdsale.new(
-        creator,
-        multisig,
-        "Wings",
-        "WINGS",
-        milestones.address,
-        forecasting.forecasting,
-        10,
-        rewardPercent
-      )
-    }).then(_crowdsale => {
-      crowdsale = _crowdsale
+      return crowdsale.setForecasting(forecasting.address)
     })
   })
 

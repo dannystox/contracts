@@ -18,6 +18,7 @@ contract('Wings', () => {
   before('Deploy Wings To Network', () => {
     dao = {
       name: chance.word(),
+      symbol: chance.word(),
       infoHash: '0x' + crypto.randomBytes(32).toString('hex'),
       underCap: false,
       reviewHours: chance.integer({min: 1, max: 504 })
@@ -28,14 +29,18 @@ contract('Wings', () => {
     }).then(_token => {
       token = _token
 
+      console.log('got token')
+      console.log('deploy wings')
       return Wings.new(token.address).then(_wings => {
         wings = _wings
       })
+    }).then(() => {
+      console.log('done')
     })
   })
 
   it('Add DAO project', () => {
-    return wings.addDAO.sendTransaction(dao.name, dao.infoHash, dao.underCap, dao.reviewHours, {
+    return wings.addDAO.sendTransaction(dao.name, dao.symbol, dao.infoHash, dao.underCap, dao.reviewHours, {
       from: creator
     }).then(() => {
       dao.id = '0x' + crypto.createHash('sha256').update(dao.name, 'utf8').digest().toString('hex')

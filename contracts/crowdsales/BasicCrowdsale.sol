@@ -7,9 +7,6 @@ import "../milestones/BasicMilestones.sol";
   Basic Crodwsale Class
 */
 contract BasicCrowdsale is CrowdsaleAbstraction {
-  /*
-    Should check review time and start/end timestamp.
-  */
   function BasicCrowdsale(
     address _owner,
     address _parent,
@@ -206,10 +203,11 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     uint sendBack = paritcipiants[msg.sender];
 
     if (sendBack > 0) {
+      paritcipiants[msg.sender] = 0;
+      
       if (!msg.sender.send(sendBack)) {
         throw;
       }
-
     } else {
       throw;
     }
