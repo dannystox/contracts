@@ -1,20 +1,37 @@
 const BigNumber = require('bignumber.js')
 const Promise = require('bluebird')
 const Token = artifacts.require("../contracts/Token.sol")
+const MultiSigWallet = artifacts.require("../contracts/MultiSigWallet.sol")
+const WingsMultisigFactory = artifacts.require("../contracts/MultiSigWallet/WingsMultisigFactory.sol")
 const fs = require('fs')
 const csv = require('csv-parser')
 
 contract('Token/LargeAllocation', () => {
   const creator = web3.eth.accounts[0]
   const toSend = web3.toWei(100, 'ether')
+  const multisigAccounts = web3.eth.accounts.slice(8, 9)
 
-  let token
+  let token, multisig
 
   const accountsCount = 10000
 
   before('Deploy Wings Token', () => {
-    return Token.new(accountsCount, {
-      from: creator
+    return WingsMultisigFactory.new().then(multisig => {
+      return Promise.mapSeries(multisigAccounts, account => {
+        return multisig.addAddress(account)
+      }).then(() => {
+        return multisig.create()
+      }).then(() => {
+        return multisig.multisig.call()
+      })
+    }).then(multisigAddress => {
+      return MultiSigWallet.at(multisigAddress)
+    }).then(_multisig => {
+      multisig = _multisig
+
+      return Token.new(accountsCount, multisig.address, {
+        from: creator
+      })
     }).then(_token => {
       token = _token
     }).then(() => {
@@ -22,6 +39,7 @@ contract('Token/LargeAllocation', () => {
     }).then(owner => {
       assert.equal(owner, creator)
     })
+
   })
 
   it('Allocation should be equal \'true\'', () => {
