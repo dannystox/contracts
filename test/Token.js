@@ -18,7 +18,7 @@ contract('Token', () => {
       return Promise.mapSeries(multisigAccounts, account => {
         return multisig.addAddress(account)
       }).then(() => {
-        return multisig.create()
+        return multisig.create(1)
       }).then(() => {
         return multisig.multisig.call()
       })
