@@ -1,14 +1,21 @@
 const BigNumber = require('bignumber.js')
 const Promise = require('bluebird')
 const Token = artifacts.require("../contracts/Token.sol")
+const MultiSigWallet = artifacts.require("../contracts/MultiSigWallet.sol")
+const WingsMultisigFactory = artifacts.require("../contracts/MultiSigWallet/WingsMultisigFactory.sol")
 const premine = require('./resources/premine.json')
 const time = require('../helpers/time')
 const errors = require('../helpers/errors')
 const parser = require('../helpers/parser')
+const abiHelper = require('../helpers/abi')
 
 contract('Token/Premine', () => {
   const creator = web3.eth.accounts[0]
   const toSend = web3.toWei(100, 'ether')
+  const multisigAccounts = web3.eth.accounts.slice(7, 9)
+
+  let token, multisig
+
   const preminer = {
     "address": "0x8f9318230e6c4d416a0ad9bb9ce105bb74170b93",
     "recipient": "0x8f9318230e6c4d416a0ad9bb9ce105bb74170c93",
@@ -23,20 +30,19 @@ contract('Token/Premine', () => {
 
   const duration = 26
 
-  let token
   const timestamps = []
+
+
+  const toSeconds = (time) => {
+    return Math.floor(time / 1000)
+  }
 
   before('Deploy Wings Token', () => {
     assert.notEqual(preminer.length, 0)
 
-    let now = new Date()
-    now.setHours(1,0,0,0)
 
-    for (let i = 0; i < duration; i++) {
-      now.setMonth(now.getMonth() + 1, 1)
-
-      timestamps.push(time.toSeconds(now.getTime()))
-    }
+    const now = new Date()
+    const month = now.getMonth()
 
     preminers = [{
       "address": web3.eth.accounts[0],
@@ -46,8 +52,34 @@ contract('Token/Premine', () => {
       "total": premine.total
     }]
 
-    return Token.new(preminers.length+1, {
-      from: creator
+
+    console.log('Timestamps: ')
+    for (let i = 1; i <= duration; i++) {
+      let date = new Date()
+      date.setMonth(month + i, 1)
+
+      const timestamp = toSeconds(date.getTime())
+      timestamps.push(timestamp)
+
+      console.log(`#${i}: ${timestamp}\t|\t${date}`)
+    }
+
+    return WingsMultisigFactory.new().then(multisig => {
+      return Promise.mapSeries(multisigAccounts, account => {
+        return multisig.addAddress(account)
+      }).then(() => {
+        return multisig.create(2)
+      }).then(() => {
+        return multisig.multisig.call()
+      })
+    }).then(multisigAddress => {
+      return MultiSigWallet.at(multisigAddress)
+    }).then(_multisig => {
+      multisig = _multisig
+
+      return Token.new(preminers.length+1, multisig.address, {
+        from: creator
+      })
     }).then(_token => {
       token = _token
     }).then(() => {
@@ -62,7 +94,6 @@ contract('Token/Premine', () => {
       assert.equal(allocation.toNumber(), preminers.length+1)
     })
   })
-
 
   it('Should add preminer to preminers list and allocate initial balance', () => {
     return Promise.each(preminers, (preminer) => {
@@ -100,6 +131,7 @@ contract('Token/Premine', () => {
       return token.getPreminer.call(preminer.address).then(preminerRawData => {
         const parsedPreminer = parser.parsePreminer(preminerRawData)
 
+        assert.equal(parsedPreminer.disabled, false)
         assert.equal(parsedPreminer.payment.toString(10), preminer.payment)
         assert.equal(parsedPreminer.allocationsCount.toNumber(), duration)
       })
@@ -154,12 +186,16 @@ contract('Token/Premine', () => {
     })
   })
 
-  it('Should release new premine portion after each month', () => {
-    const monthlySeconds = 2678500
+  it("Should release 50% of premine", () => {
+    const partDuration = duration/2
 
     return Promise.each(preminers, (preminer) => {
-      const releasePremine = () => {
-        return time.move(web3, monthlySeconds).then(() => {
+      const releasePremine = (i) => {
+        return time.blockchainTime(web3).then(blockchainTime => {
+          const timeToMove = Math.abs(timestamps[i] - blockchainTime) + 3600
+
+          return time.move(web3, timeToMove)
+        }).then(() => {
           return token.releasePremine.sendTransaction({
             from: preminer.address
           })
@@ -167,10 +203,10 @@ contract('Token/Premine', () => {
       }
 
       const start = (i) => {
-        return releasePremine().then(() => {
+        return releasePremine(i).then(() => {
           i++;
 
-          if (i <= duration) {
+          if (i < partDuration) {
             return start(i)
           }
 
@@ -180,42 +216,184 @@ contract('Token/Premine', () => {
       return start(0).then(() => {
         return token.balanceOf(preminer.recipient)
       }).then(balance => {
-        assert.equal(balance.toString(10), preminer.total)
+        const afterMonthes = new BigNumber(preminer.balance).add(new BigNumber(preminer.payment).mul(partDuration))
+        assert.equal(balance.toString(10), afterMonthes.toString(10))
       })
     })
   })
 
-  it('Should doesnt allow new premine release after all premine reached closed', () => {
-    const monthlySeconds = 2678500
+  it('Should disable premine from one account and move rest of premine on another', () => {
+    const preminer = preminers[0];
 
-    return time.move(web3, monthlySeconds).then(() => {
-      return Promise.each(preminers, (preminer) => {
-        return token.balanceOf(preminer.recipient).then((balance) => {
-          return token.releasePremine.sendTransaction({
-            from: preminer.address
-          }).then(() => {
-            return token.balanceOf(preminer.recipient)
-          }).then(newBalance => {
-            assert.equal(newBalance.toString(10), balance.toString(10))
-          })
+    const functionName = 'disablePreminer(address,address,address)'
+    const accounts = [
+      preminer.address,
+      web3.eth.accounts[1],
+      web3.eth.accounts[2]
+    ]
+
+    let data = '0x' + abiHelper.getFunctionName(functionName)
+
+    accounts.forEach(account => {
+      data += abiHelper.getAddress(account)
+    })
+
+    return multisig.submitTransaction(
+      token.address,
+      0,
+      data,
+      {
+        from: multisigAccounts[0]
+      }
+    ).then(result => {
+      return multisig.transactionCount.call()
+    }).then(txId => {
+      txId = txId.toNumber()-1
+
+      const restOfAccounts = multisigAccounts.slice(1)
+      return Promise.each(restOfAccounts, account => {
+        return multisig.confirmTransaction(0, {
+          from: account
+        })
+      }).then(() => {
+        return txId
+      })
+    }).then(txId => {
+      return multisig.isConfirmed(txId).then(confirmed => {
+        assert.equal(confirmed, true)
+      })
+    })
+  })
+
+  it('Should has preminer disabled', () => {
+    return token.getPreminer(preminers[0].address).then(preminerRawData => {
+      const parsedPreminer = parser.parsePreminer(preminerRawData)
+
+      assert.equal(parsedPreminer.disabled, true)
+    })
+  })
+
+  it('Shouldnt possible to release premine from disabled preminer', () => {
+    return token.releasePremine({
+      from: preminers[0].address
+    }).then(() => {
+      throw new Error('Should return JUMP error')
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+    })
+  })
+
+
+  it('Should contains another one preminer', () => {
+    return Promise.join(
+      token.getPreminer(web3.eth.accounts[0]),
+      token.getPreminer(web3.eth.accounts[1]),
+      (oldPreminerData, newPreminerData) => {
+        const oldPreminer = parser.parsePreminer(oldPreminerData)
+        const newPreminer = parser.parsePreminer(newPreminerData)
+
+        assert.equal(oldPreminer.disabled, true)
+        assert.equal(newPreminer.disabled, false)
+        assert.equal(newPreminer.recipient, web3.eth.accounts[2])
+        assert.equal(newPreminer.payment.toString(10), oldPreminer.payment.toString(10))
+        assert.equal(newPreminer.latestAllocation.toString(10), oldPreminer.latestAllocation.toString(10))
+        assert.equal(newPreminer.allocationsCount.toString(10), oldPreminer.allocationsCount.toString(10))
+      }
+    ).then(() => {
+      preminers.push({
+        address: web3.eth.accounts[1],
+        recipient: web3.eth.accounts[2],
+        balance: preminers[0].balance,
+        payment: preminers[0].payment
+      })
+    })
+  })
+
+  it('Should contains new preminer allocations', () => {
+    const preminer = preminers[1]
+    let promises = []
+
+    for (let i = 0; i < duration; i++) {
+      promises.push(token.getPreminerAllocation.call(preminer.address, i))
+    }
+
+    return Promise.all(promises).then(timestamps => {
+      return Promise.each(timestamps, (timestamp, index) => {
+        assert.equal(timestamp.toNumber(), timestamps[index])
+      })
+    })
+  })
+
+  it('Should release rest of premine', () => {
+    let preminer = preminers[1]
+
+    const releasePremine = (i) => {
+      return time.blockchainTime(web3).then(blockchainTime => {
+        const diff = Math.abs(timestamps[i] - blockchainTime) + 3600
+        return time.move(web3, diff)
+      }).then(() => {
+        return token.releasePremine({
+          from: preminer.address
         })
       })
+    }
+
+    const start = (i) => {
+      return releasePremine(i).then(() => {
+        i++;
+
+        if (i < duration) {
+          return start(i)
+        }
+
+      })
+    }
+
+    return start(duration/2).then(() => {
+      return token.balanceOf(preminer.recipient)
+    }).then(balance => {
+      assert.equal(balance.toString(10), new BigNumber(preminer.payment).mul(duration/2).toString(10))
     })
   })
 
   it('Should allow to send user premine to another account', () => {
-    return token.transfer.sendTransaction(preminer.address, preminers[0].total, {
-      from: preminers[0].recipient
+    let initialBalance
+
+    return token.balanceOf(preminers[0].recipient).then(balance => {
+      initialBalance = balance
+
+      return token.transfer(preminers[1].address, balance, {
+        from: preminers[0].recipient
+      })
     }).then(() => {
-      return token.balanceOf(preminer.address)
-    }).then((balance) => {
-      assert.equal(balance.toString(10), preminers[0].total)
+      return token.balanceOf(preminers[1].address)
+    }).then(balance => {
+      assert.equal(balance.toString(10), initialBalance.toString(10))
     })
+
   })
 
   it('Should contains zero tokens at premine creator account', () => {
     return token.balanceOf.call(preminers[0].address).then(balance => {
-      assert.equal(balance.toNumber(), 0)
+      assert.equal(balance.toString(10), 0)
+    })
+  })
+
+  it('Shouldnt allow to release more pre-mine on new account', () => {
+    let initialBalance
+
+    return token.balanceOf.call(preminers[1].recipient).then(balance => {
+      initialBalance = balance
+
+      return time.move(web3, 2419200*3)
+    }).then(() => {
+      return token.releasePremine({
+        from: preminers[1].address
+      })
+    }).then(() => {
+      return token.balanceOf(preminers[1].recipient)
+    }).then(balance => {
+      assert.equal(balance.toString(10), initialBalance.toString(10))
     })
   })
 

@@ -1,6 +1,6 @@
 pragma solidity ^0.4.8;
 
-import './zeppelin/Ownable.sol';
+import "./zeppelin/Ownable.sol";
 import "./zeppelin/token/StandardToken.sol";
 
 /*
@@ -22,6 +22,7 @@ contract Token is StandardToken, Ownable {
   event PREMINER_ADDED(address indexed owner, address account, uint amount);
   event PREMINE_ALLOCATION_ADDED(address indexed account, uint time);
   event PREMINE_RELEASE(address indexed account, uint timestamp, uint amount);
+  event PREMINER_CHANGED(address indexed oldPreminer, address newPreminer, address newRecipient);
 
   /*
     Premine structure
@@ -30,6 +31,7 @@ contract Token is StandardToken, Ownable {
     address account;
     uint monthlyPayment;
     uint latestAllocation;
+    bool disabled;
 
     uint allocationsCount;
     mapping(uint => uint) allocations;
@@ -69,6 +71,33 @@ contract Token is StandardToken, Ownable {
   uint public accountsToAllocate;
 
   /*
+    Multisignature
+  */
+  address public multisignature;
+
+  /*
+    Only multisignature
+  */
+  modifier onlyMultisignature() {
+    if (msg.sender != multisignature) {
+      throw;
+    }
+
+    _;
+  }
+
+  /*
+    When preminer is not disabled
+  */
+  modifier whenPreminerIsntDisabled(address _account) {
+    if (preminers[_account].disabled == true) {
+      throw;
+    }
+
+    _;
+  }
+
+  /*
     Modifier for checking is allocation completed.
     Maybe we should add here pre-mine accounts too.
   */
@@ -102,13 +131,14 @@ contract Token is StandardToken, Ownable {
     }
   }
 
-  function Token(uint _accountsToAllocate) {
+  function Token(uint _accountsToAllocate, address _multisignature) {
     /*
       Maybe we should calculate it in allocation and pre-mine.
       I mean total supply
     */
     owner = msg.sender;
     accountsToAllocate = _accountsToAllocate;
+    multisignature = _multisignature;
   }
 
   /*
@@ -151,6 +181,7 @@ contract Token is StandardToken, Ownable {
         recipient,
         monthlyPayment,
         0,
+        false,
         0
       );
 
@@ -162,12 +193,37 @@ contract Token is StandardToken, Ownable {
   }
 
   /*
+    Disable pre-miner
+  */
+  function disablePreminer(address _preminer, address _newPreminer, address _newRecipient) onlyMultisignature() whenPreminerIsntDisabled(_preminer) {
+    var oldPreminer = preminers[_preminer];
+
+    if (oldPreminer.account == address(0)) {
+      throw;
+    }
+
+    preminers[_newPreminer] = oldPreminer;
+    preminers[_newPreminer].account = _newRecipient;
+    oldPreminer.disabled = true;
+
+    if(preminers[_newPreminer].disabled == true) {
+      throw;
+    }
+
+    for (uint i = 0; i < preminers[_newPreminer].allocationsCount; i++) {
+      preminers[_newPreminer].allocations[i] = oldPreminer.allocations[i];
+    }
+
+    PREMINER_CHANGED(_preminer, _newPreminer, _newRecipient);
+  }
+
+  /*
     Add pre-mine allocation
   */
-  function addPremineAllocation(address _preminer, uint _time) onlyOwner() whenAllocation(true) {
+  function addPremineAllocation(address _preminer, uint _time) onlyOwner() whenAllocation(true) whenPreminerIsntDisabled(_preminer) {
     var preminer = preminers[_preminer];
 
-    if (preminer.account == address(0) || _time == 0 || preminer.allocationsCount == MAX_ALLOCATIONS_COUNT) {
+    if (preminer.account == address(0) ||  _time == 0 || preminer.allocationsCount == MAX_ALLOCATIONS_COUNT) {
       throw;
     }
 
@@ -194,10 +250,10 @@ contract Token is StandardToken, Ownable {
   /*
     Get preminer
   */
-  function getPreminer(address _preminer) constant returns (address, uint, uint, uint) {
+  function getPreminer(address _preminer) constant returns (address, bool, uint, uint, uint) {
     var preminer = preminers[_preminer];
 
-    return (preminer.account, preminer.monthlyPayment, preminer.latestAllocation, preminer.allocationsCount);
+    return (preminer.account, preminer.disabled, preminer.monthlyPayment, preminer.latestAllocation, preminer.allocationsCount);
   }
 
   /*
@@ -212,7 +268,7 @@ contract Token is StandardToken, Ownable {
     Gas usage: 0x5786 or 22406 GAS.
     Maximum is 26 months of pre-mine in case of Wings. So should be enough to execute it.
   */
-  function releasePremine() whenAllocation(false) {
+  function releasePremine() whenAllocation(false) whenPreminerIsntDisabled(msg.sender) {
     var preminer = preminers[msg.sender];
 
     if (preminer.account == address(0)) {
