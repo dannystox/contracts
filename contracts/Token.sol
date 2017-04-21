@@ -284,7 +284,7 @@ contract Token is StandardToken, Ownable {
         balances[preminer.account] = safeAdd(balances[preminer.account], preminer.monthlyPayment);
         preminer.latestAllocation = i;
 
-        PREMINE_RELEASE(preminer.account, preminer.monthlyPayment, preminer.allocations[i]);
+        PREMINE_RELEASE(preminer.account, preminer.allocations[i], preminer.monthlyPayment);
         preminer.allocations[i] = 0;
       } else {
         break;
