@@ -198,7 +198,7 @@ contract Token is StandardToken, Ownable {
   function disablePreminer(address _preminer, address _newPreminer, address _newRecipient) onlyMultisignature() whenPreminerIsntDisabled(_preminer) {
     var oldPreminer = preminers[_preminer];
 
-    if (oldPreminer.account == address(0)) {
+    if (oldPreminer.account == address(0) || preminers[_newPreminer].account != address(0)) {
       throw;
     }
 
