@@ -45,8 +45,8 @@ contract Token is StandardToken, Ownable {
   /*
     Token Name & Token Symbol & Decimals
   */
-  string public name = "TWINGS";
-  string public symbol = "TWINGS";
+  string public name = "WINGS";
+  string public symbol = "WINGS";
   uint public decimals = 18;
 
   /*
