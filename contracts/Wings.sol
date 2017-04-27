@@ -4,6 +4,8 @@ import "./DAOAbstraction.sol";
 import "./DAO.sol";
 
 contract Wings  {
+  event ADD(bytes32 indexed id, address owner);
+
   /*
     DAOs
   */
@@ -55,6 +57,7 @@ contract Wings  {
     daos[_daoId] = dao;
     daosIds[totalDAOsCount++] = _daoId;
     myDAOsIds[msg.sender][myDAOsCount[msg.sender]++] = _daoId;
+    ADD(_daoId, msg.sender);
   }
 
   /*
