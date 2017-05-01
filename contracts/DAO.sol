@@ -5,8 +5,8 @@ import "./milestones/BasicMilestones.sol";
 import "./forecasts/BasicForecasting.sol";
 
 contract DAO is DAOAbstraction {
-  event PUBLISH(bytes32 indexed id, bytes32 _infoHash);
-  event UPDATE(bytes32 indexed id, bytes32 _infoHash);
+  event DAO_PUBLISH(bytes32 indexed id, bytes32 _infoHash);
+  event DAO_UPDATE_INFO(bytes32 indexed id, bytes32 _infoHash);
 
   function DAO(
       address _owner,
@@ -43,7 +43,7 @@ contract DAO is DAOAbstraction {
     forecasting = new BasicForecasting(_startTimestamp, _endTimestamp, _rewardPercent, token, milestones, underCap);
 
     milestones.setLimitations(startTimestamp, startTimestamp + reviewHours * 1 hours);
-    PUBLISH(id, infoHash);
+    DAO_PUBLISH(id, infoHash);
   }
 
   /*
@@ -51,6 +51,6 @@ contract DAO is DAOAbstraction {
   */
   function update(bytes32 _infoHash) onlyOwner() onlyReview() {
     infoHash = _infoHash;
-    UPDATE(id, infoHash);
+    DAO_UPDATE_INFO(id, infoHash);
   }
 }
