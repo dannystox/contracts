@@ -48,7 +48,7 @@ contract DAO is DAOAbstraction {
       uint _endTimestamp = _startTimestamp + (_forecastHours * 1 hours);
 
       crowdsale = new BasicCrowdsale(msg.sender, address(0), _multisig, name, symbol, milestones, _initialPrice, _rewardPercent);
-      forecasting = new BasicForecasting(_startTimestamp, _endTimestamp, rewardPercent, token, milestones, address(0), underCap);
+      forecasting = new BasicForecasting(_startTimestamp, _endTimestamp, _rewardPercent, token, milestones, address(0), underCap);
 
       crowdsale.setForecasting(forecasting);
       crowdsale.setLimitations(_startTimestamp, _endTimestamp, (_endTimestamp + (_crowdsaleHours * 1 hours)));
