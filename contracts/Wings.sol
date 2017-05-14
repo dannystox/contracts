@@ -6,6 +6,8 @@ import "./forecasts/ForecastingFactory.sol";
 import "./crowdsales/CrowdsaleFactory.sol";
 
 contract Wings  {
+  event DAO_ADD(bytes32 indexed id, address owner);
+
   modifier isValidReviewHours(uint _reviewHours) {
     if (_reviewHours < 1 || _reviewHours > 504) {
       throw;
@@ -266,6 +268,7 @@ contract Wings  {
     daos[_daoId] = dao;
     daosIds[totalDAOsCount++] = _daoId;
     myDAOsIds[msg.sender][myDAOsCount[msg.sender]++] = _daoId;
+    DAO_ADD(_daoId, msg.sender);
   }
 
   /*

@@ -3,6 +3,9 @@ pragma solidity ^0.4.8;
 import "./DAOAbstraction.sol";
 
 contract DAO is DAOAbstraction {
+  event DAO_PUBLISH(bytes32 indexed id, bytes32 _infoHash);
+  event DAO_UPDATE_INFO(bytes32 indexed id, bytes32 _infoHash);
+
   function DAO(
       address _timeManager,
       address _owner,
@@ -19,13 +22,14 @@ contract DAO is DAOAbstraction {
         milestones = _milestones;
         forecasting = _forecasting;
         crowdsale = _crowdsale;
-  }
+      }
 
   /*
     Update project data
   */
   function update(bytes32 _infoHash) onlyOwner() inTime() {
     infoHash = _infoHash;
+    DAO_UPDATE_INFO(id, infoHash);
   }
 
 }

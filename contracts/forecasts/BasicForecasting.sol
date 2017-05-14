@@ -4,6 +4,7 @@ import "./ForecastingAbstraction.sol";
 import "../milestones/BasicMilestones.sol";
 
 contract BasicForecasting is ForecastingAbstraction {
+  event ADD_FORECAST(address indexed account, uint amount, address forecast);
   /*
     Lock tokens here in forecast contract?
   */
@@ -51,6 +52,8 @@ contract BasicForecasting is ForecastingAbstraction {
 
     forecasts[forecastsCount++] = forecast;
     userForecasts[msg.sender] = forecast;
+
+    ADD_FORECAST(msg.sender, _amount, address(this));
   }
 
   /*
