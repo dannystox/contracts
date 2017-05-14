@@ -258,6 +258,7 @@ contract Wings  {
     BasicMilestones(baseInfo.milestones).setTime(startReviewTime, endReviewTime);
     BasicForecasting(baseInfo.forecasting).setTime(endReviewTime, endForecastTime);
     BasicCrowdsale(baseInfo.crowdsale).setLimitations(endReviewTime, endForecastTime, endCrowdsaleTime);
+    BasicCrowdsale(baseInfo.crowdsale).setForecasting(baseInfo.forecasting);
 
     baseInfo.inProgress = false;
     daos[_daoId] = dao;
