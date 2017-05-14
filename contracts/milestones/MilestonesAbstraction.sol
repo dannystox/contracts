@@ -1,45 +1,23 @@
+pragma solidity ^0.4.8;
+
+import "../zeppelin/Ownable.sol";
+import "../zeppelin/SafeMath.sol";
+import "../Temporary.sol";
+
 /*
   Basic milestones contract
 */
-pragma solidity ^0.4.2;
-
-import "../zeppelin/Ownable.sol";
-
-contract MilestonesAbstraction is Ownable {
-    modifier onlyParent() {
-      if (msg.sender == parent) {
-        _;
-      } else {
-        throw;
-      }
-    }
-
+contract MilestonesAbstraction is Ownable, SafeMath, Temporary {
     /*
       Milestone structure
     */
     struct Milestone {
-      uint timestamp;
+      uint created_at;
       uint updated_at;
 
       uint amount;
       bytes32 items;
       bool completed;
-    }
-
-    modifier beforeTime {
-      if (startTimestamp == 0 && endTimestamp == 0) {
-        _;
-      } else {
-        throw;
-      }
-    }
-
-    modifier inTime {
-      if (startTimestamp == 0 || (block.timestamp > (startTimestamp) && block.timestamp < endTimestamp)) {
-        _;
-      } else {
-        throw;
-      }
     }
 
     /*
@@ -53,24 +31,9 @@ contract MilestonesAbstraction is Ownable {
     uint public milestonesCount;
 
     /*
-      When we allow to add milestones
-    */
-    uint public startTimestamp;
-
-    /*
-      When we doesnt allow to add milestones
-    */
-    uint public endTimestamp;
-
-    /*
-      Address of parent contract or parent creator
-    */
-    address public parent;
-
-    /*
       Max count of milestones
     */
-    uint public maxCount;
+    uint public MAX_COUNT = 10;
 
     /*
       Is we under cap
@@ -78,9 +41,9 @@ contract MilestonesAbstraction is Ownable {
     bool public cap;
 
     /*
-      Set time when it's possible to start adding milestones and when it's not possible.
+      Total amount
     */
-    function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyParent() beforeTime();
+    uint public totalAmount;
 
     /*
       Adding milestones
@@ -98,19 +61,7 @@ contract MilestonesAbstraction is Ownable {
     function remove(uint index) onlyOwner() inTime();
 
     /*
-      Completing milestone.
-      Temporary version.
-      ToDo: Use forecast consensus to complete milestones
-    */
-    function complete(uint index) onlyOwner();
-
-    /*
       Get milestone by index
     */
     function get(uint index) constant returns (uint, bytes32, bool);
-
-    /*
-      Get milestones sum
-    */
-    function getTotalAmount() constant returns (uint);
 }

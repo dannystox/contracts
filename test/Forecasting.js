@@ -1,6 +1,7 @@
 const Promise = require('bluebird')
 const Forecasting = artifacts.require("../contracts/forecasts/BasicForecasting.sol")
 const Milestones = artifacts.require("../contracts/milestones/BasicMilestones.sol")
+const Crowdsale = artifacts.require("../contracts/crowdsales/BasicCrowdsale.sol")
 const Token = artifacts.require("../contracts/Token.sol")
 const Chance = require('chance')
 const crypto = require('crypto')
@@ -12,30 +13,46 @@ const miner = require('../helpers/miner')
 contract('Forecasting Alone', () => {
   let chance = new Chance()
   const creator = web3.eth.accounts[0]
-  let forecasting, milestones, token
+  let forecasting, milestones, token, crowdsale
   let currentTime
 
   before('Deploy Milestones & Forecasting', () => {
     return time.blockchainTime(web3).then(_time => {
       currentTime = _time
-      return Milestones.new(creator, false)
+      return Milestones.new(creator, creator, false)
     }).then(_milestones => {
       milestones = _milestones
 
       const start = currentTime
       const end = start + 3600
-      return milestones.setLimitations.sendTransaction(start, end)
+      return milestones.setTime(start, end, {
+        from: creator
+      })
     }).then(() => {
       return Token.new(1)
     }).then(_token => {
       token = _token
+      return Crowdsale.new(
+          creator,
+          creator,
+          creator,
+          chance.word(),
+          chance.word(),
+          milestones.address,
+          chance.integer({min: 1, max: 500}),
+          chance.integer({min: 1, max: 1000})
+        )
+    }).then(_crowdsale => {
+      crowdsale = _crowdsale
 
       const start = currentTime + 3600
       const end = start + 3600
 
       const rewardPercent = chance.integer({min: 1, max: 100000000 })
 
-      return Forecasting.new(start, end, rewardPercent, token.address, milestones.address, false)
+      return Forecasting.new(creator, rewardPercent, token.address, milestones.address, crowdsale.address).then(forecasting => {
+        return forecasting.setTime(start, end).then(() => forecasting)
+      })
     }).then(_forecasting => {
       forecasting = _forecasting
     })
@@ -48,7 +65,9 @@ contract('Forecasting Alone', () => {
         message: '0x' + crypto.randomBytes(32).toString('hex')
       }
 
-      return forecasting.add.sendTransaction(forecast.amount, forecast.message).catch(err => {
+      return forecasting.add(forecast.amount, forecast.message).then(() => {
+        throw new Error('Should return JUMP error')
+      }).catch(err => {
         assert.equal(errors.isJump(err.message), true)
       })
   })
@@ -109,8 +128,10 @@ contract('Forecasting Alone', () => {
     }
 
     return forecasting
-      .add
-      .sendTransaction(forecast.amount, forecast.message)
+      .add(forecast.amount, forecast.message)
+      .then(() => {
+        throw new Error('Should return JUMP error')
+      })
       .catch(err => {
         assert.equal(errors.isJump(err.message), true)
       })
