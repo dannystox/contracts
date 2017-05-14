@@ -19,13 +19,15 @@ contract('Forecasting Alone', () => {
   before('Deploy Milestones & Forecasting', () => {
     return time.blockchainTime(web3).then(_time => {
       currentTime = _time
-      return Milestones.new(creator, false)
+      return Milestones.new(creator, creator, false)
     }).then(_milestones => {
       milestones = _milestones
 
       const start = currentTime
       const end = start + 3600
-      return milestones.setLimitations.sendTransaction(start, end)
+      return milestones.setTime(start, end, {
+        from: creator
+      })
     }).then(() => {
       return Token.new(1)
     }).then(_token => {
@@ -48,7 +50,9 @@ contract('Forecasting Alone', () => {
 
       const rewardPercent = chance.integer({min: 1, max: 100000000 })
 
-      return Forecasting.new(start, end, rewardPercent, token.address, milestones.address, crowdsale.address, false)
+      return Forecasting.new(creator, rewardPercent, token.address, milestones.address, crowdsale.address).then(forecasting => {
+        return forecasting.setTime(start, end).then(() => forecasting)
+      })
     }).then(_forecasting => {
       forecasting = _forecasting
     })
@@ -61,7 +65,9 @@ contract('Forecasting Alone', () => {
         message: '0x' + crypto.randomBytes(32).toString('hex')
       }
 
-      return forecasting.add.sendTransaction(forecast.amount, forecast.message).catch(err => {
+      return forecasting.add(forecast.amount, forecast.message).then(() => {
+        throw new Error('Should return JUMP error')
+      }).catch(err => {
         assert.equal(errors.isJump(err.message), true)
       })
   })
@@ -122,8 +128,10 @@ contract('Forecasting Alone', () => {
     }
 
     return forecasting
-      .add
-      .sendTransaction(forecast.amount, forecast.message)
+      .add(forecast.amount, forecast.message)
+      .then(() => {
+        throw new Error('Should return JUMP error')
+      })
       .catch(err => {
         assert.equal(errors.isJump(err.message), true)
       })
