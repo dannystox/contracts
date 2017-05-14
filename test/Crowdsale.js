@@ -44,16 +44,24 @@ contract('Crowdsale', () => {
     return time.blockchainTime(web3).then(time => {
       startTime = time
 
-      return Milestones.new(creator, false)
+      console.log('milestones')
+      return Milestones.new(creator, creator, false)
     }).then(_milestones => {
       milestones = _milestones
 
+      const milestoneStartTime = startTime
+      const milestoneEndTime = startTime + 3600
+
+      console.log('set time milestone')
+      return milestones.setTime(milestoneStartTime, milestoneEndTime, {
+        from: creator
+      })
+    }).then(() => {
       milestonesItems.push({
         amount: web3.toWei(1, 'ether'),
         items: '0x' + crypto.randomBytes(32).toString('hex')
       })
 
-      // add milestones and set limittation to two hours ago
       for (let i = 0; i < 3; i++) {
         const milestone = {
           amount: web3.toWei(chance.integer({min: 1, max: 1000}), 'ether'),
@@ -63,17 +71,14 @@ contract('Crowdsale', () => {
         milestonesItems.push(milestone)
       }
 
+      console.log('add milestones')
       return Promise.mapSeries(milestonesItems, milestone => {
-        return milestones.add.sendTransaction(milestone.amount, milestone.items, {
+        return milestones.add(milestone.amount, milestone.items, {
           from: creator
         })
-      }).then(() => {
-        const milestoneStartTime = startTime
-        const milestoneEndTime = startTime + 3600
-
-        return milestones.setLimitations.sendTransaction(milestoneStartTime, milestoneEndTime)
       })
     }).then(() => {
+      console.log('crowdsale start')
       return Crowdsale.new(
         creator,
         creator,
@@ -91,14 +96,14 @@ contract('Crowdsale', () => {
       const forecastingEndTime = startTime + 7200
 
       return Forecasting.new(
-        forecastingStartTime,
-        forecastingEndTime,
+        creator,
         rewardPercent,
         '0x0',
         milestones.address,
-        crowdsale.address,
-        false
-      )
+        crowdsale.address
+      ).then(forecasting => {
+        return forecasting.setTime(forecastingStartTime, forecastingEndTime).then(() => forecasting)
+      })
     }).then(_forecasting => {
       forecasting = _forecasting
       return crowdsale.setForecasting(forecasting.address)
