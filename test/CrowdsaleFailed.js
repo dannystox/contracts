@@ -47,10 +47,17 @@ contract('CrowdsaleFailed', () => {
     return time.blockchainTime(web3).then(time => {
       startTime = time
 
-      return Milestones.new(creator, false)
+      return Milestones.new(creator, creator, false)
     }).then(_milestones => {
       milestones = _milestones
 
+      const milestoneStartTime = startTime
+      const milestoneEndTime = startTime + 3600
+
+      return milestones.setTime(milestoneStartTime, milestoneEndTime, {
+        from: creator
+      })
+    }).then(() => {
       milestonesItems.push({
         amount: web3.toWei(100, 'ether'),
         items: '0x' + crypto.randomBytes(32).toString('hex')
@@ -67,14 +74,9 @@ contract('CrowdsaleFailed', () => {
       }
 
       return Promise.mapSeries(milestonesItems, milestone => {
-        return milestones.add.sendTransaction(milestone.amount, milestone.items, {
+        return milestones.add(milestone.amount, milestone.items, {
           from: creator
         })
-      }).then(() => {
-        const milestoneStartTime = startTime
-        const milestoneEndTime = startTime + 3600
-
-        return milestones.setLimitations.sendTransaction(milestoneStartTime, milestoneEndTime)
       })
     }).then(() => {
       multisig = web3.eth.accounts[1]
@@ -96,14 +98,14 @@ contract('CrowdsaleFailed', () => {
       const forecastingEndTime = startTime + 7200
 
       return Forecasting.new(
-        forecastingStartTime,
-        forecastingEndTime,
+        creator,
         rewardPercent,
         '0x0',
         milestones.address,
-        crowdsale.address,
-        false
-      )
+        crowdsale.address
+      ).then(forecasting => {
+        return forecasting.setTime(forecastingStartTime, forecastingEndTime).then(() => forecasting)
+      })
     }).then(_forecasting => {
       forecasting = _forecasting
 
