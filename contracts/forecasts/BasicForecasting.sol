@@ -7,21 +7,17 @@ contract BasicForecasting is ForecastingAbstraction {
   /*
     Lock tokens here in forecast contract?
   */
-  function BasicForecasting(uint _startTimestamp,
-                           uint _endTimestamp,
-                           uint _rewardPercent,
-                           address _token,
-                           address _milestones,
-                           address _crowdsale,
-                           bool _cap) checkRewardPercent(_rewardPercent) {
-    startTimestamp = _startTimestamp;
-    endTimestamp = _endTimestamp;
+  function BasicForecasting(address _timeManager,
+                            uint _rewardPercent,
+                            address _token,
+                            address _milestones,
+                            address _crowdsale
+                          ) isValidRewardPercent(_rewardPercent) {
+    timeManager = _timeManager;
     rewardPercent = _rewardPercent;
     token = Token(_token);
     milestones = BasicMilestones(_milestones);
     crowdsale = _crowdsale;
-
-    cap = _cap;
   }
 
   /*
@@ -29,7 +25,7 @@ contract BasicForecasting is ForecastingAbstraction {
     ToDo: We should check maximum amount of forecasting
   */
   function add(uint _amount, bytes32 _message) inTime() {
-    if (cap) {
+    if (milestones.cap() == true) {
         if (max == 0) {
           max = milestones.totalAmount();
         }
@@ -63,7 +59,7 @@ contract BasicForecasting is ForecastingAbstraction {
   function getByUser(address _user) constant returns (uint, uint, bytes32) {
     var forecast = userForecasts[_user];
 
-    return (forecast.amount, forecast.timestamp, forecast.message);
+    return (forecast.amount, forecast.created_at, forecast.message);
   }
 
   /*
@@ -72,6 +68,6 @@ contract BasicForecasting is ForecastingAbstraction {
   function get(uint _index) constant returns (address, uint, uint, bytes32) {
     var forecast = forecasts[_index];
 
-    return (forecast.owner, forecast.amount, forecast.timestamp, forecast.message);
+    return (forecast.owner, forecast.amount, forecast.created_at, forecast.message);
   }
 }

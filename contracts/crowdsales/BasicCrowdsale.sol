@@ -45,7 +45,7 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
     balances[recipient] = safeAdd(balances[recipient], tokens);
   }
 
-  function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyOwner() isPossibleToModificate() {
+  function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyParent() isPossibleToModificate() {
     if (lockDataTimestamp > startTimestamp || startTimestamp > endTimestamp || lockDataTimestamp != 0) {
       throw;
     }
@@ -204,7 +204,7 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
 
     if (sendBack > 0) {
       paritcipiants[msg.sender] = 0;
-      
+
       if (!msg.sender.send(sendBack)) {
         throw;
       }

@@ -8,7 +8,7 @@ contract MilestonesFactory is Factory {
       address _owner,
       bool _cap
     ) public returns (address) {
-      var milestones = new BasicMilestones(_owner, _cap);
+      var milestones = new BasicMilestones(timeManager, _owner, _cap);
 
       register(milestones);
 

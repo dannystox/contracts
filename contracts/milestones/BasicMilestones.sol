@@ -6,18 +6,10 @@ import "./MilestonesAbstraction.sol";
   Basic Milestone implementation
 */
 contract BasicMilestones is MilestonesAbstraction {
-  function BasicMilestones(address _owner, bool _cap) {
+  function BasicMilestones(address _timeManager, address _owner, bool _cap) {
+    timeManager = _timeManager;
     owner = _owner;
-    parent = msg.sender;
     cap = _cap;
-  }
-
-  /*
-    Set time when it's possible to start adding milestones and when it's not possible.
-  */
-  function setLimitations(uint _startTimestamp, uint _endTimestamp) onlyParent() beforeTime() {
-    startTimestamp = _startTimestamp;
-    endTimestamp = _endTimestamp;
   }
 
   /*
@@ -72,19 +64,6 @@ contract BasicMilestones is MilestonesAbstraction {
 
     delete milestones[milestonesCount-1];
     milestonesCount--;
-  }
-
-  /*
-    Completing milestone.
-    Temporary version.
-    ToDo: Use forecast consensus to complete milestones
-  */
-  function complete(uint index) onlyOwner() {
-    if (index > milestonesCount) {
-      throw;
-    }
-
-    milestones[index].completed = true;
   }
 
   /*

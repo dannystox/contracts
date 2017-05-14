@@ -5,22 +5,16 @@ import "./BasicForecasting.sol";
 
 contract ForecastingFactory is Factory {
   function create(
-      uint _startTimestamp,
-      uint _endTimestamp,
       uint _rewardPercent,
-      address _token,
       address _milestones,
-      address _crowdsale,
-      bool _cap
+      address _crowdsale
     ) public returns (address) {
       var forecasting = new BasicForecasting(
-          _startTimestamp,
-          _endTimestamp,
+          timeManager,
           _rewardPercent,
-          _token,
+          token,
           _milestones,
-          _crowdsale,
-          _cap
+          _crowdsale
         );
 
       register(forecasting);

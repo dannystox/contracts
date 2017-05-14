@@ -6,6 +6,13 @@ contract Factory {
   mapping(address => bool) public isInstantiation;
   mapping(address => address[]) public instantiations;
 
+  address public timeManager;
+  address public token;
+
+  function Factory(address _token, address _timeManager) {
+    token = _token;
+    timeManager = _timeManager;
+  }
 
   /// @dev Returns number of instantiations by creator.
   /// @param creator Contract creator.

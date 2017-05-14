@@ -3,23 +3,13 @@ pragma solidity ^0.4.8;
 import "../zeppelin/Ownable.sol";
 import "../Token.sol";
 import "../milestones/MilestonesAbstraction.sol";
+import "../Temporary.sol";
 
-contract ForecastingAbstraction is Ownable {
-  /*
-      When it possible to add forecasting
-  */
-  modifier inTime {
-    if (block.timestamp > startTimestamp && block.timestamp < endTimestamp) {
-      _;
-    } else {
-      throw;
-    }
-  }
-
+contract ForecastingAbstraction is Ownable, Temporary {
   /*
     Allow 6 numbers after dot.
   */
-  modifier checkRewardPercent(uint _rewardPercent) {
+  modifier isValidRewardPercent(uint _rewardPercent) {
     if (_rewardPercent > 100000000 || _rewardPercent == 0) {
       throw;
     }
@@ -30,7 +20,7 @@ contract ForecastingAbstraction is Ownable {
   struct Forecast {
     address owner;
     uint amount;
-    uint timestamp;
+    uint created_at;
     bytes32 message;
   }
 
@@ -41,16 +31,6 @@ contract ForecastingAbstraction is Ownable {
     Forecasts count
   */
   uint public forecastsCount;
-
-  /*
-    When we allow to add milestones
-  */
-  uint public startTimestamp;
-
-  /*
-    When we doesnt allow to add milestones
-  */
-  uint public endTimestamp;
 
   /*
     Reward forecasting percent
@@ -66,6 +46,10 @@ contract ForecastingAbstraction is Ownable {
     Milestones
   */
   MilestonesAbstraction public milestones;
+
+  /*
+    Crowdsale
+  */
   address public crowdsale;
 
   /*
@@ -73,16 +57,10 @@ contract ForecastingAbstraction is Ownable {
   */
   uint public max;
 
-
-  /*
-    Is under cap?
-  */
-  bool public cap;
-
   /*
     Add forecast
   */
-  function add(uint _amount, bytes32 _message);
+  function add(uint _amount, bytes32 _message) inTime();
 
   /*
     Get user forecast
