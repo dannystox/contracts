@@ -42,7 +42,8 @@ contract Wings  {
     bool inProgress;
   }
 
-  mapping(address => BaseDAOInfo[]) baseInfos;
+  mapping(address => mapping(uint => BaseDAOInfo)) baseInfos;
+  mapping(address => uint) baseInfosCount;
 
   /*
     DAOs
@@ -94,10 +95,12 @@ contract Wings  {
   }
 
   function getBaseInfo(uint _index) internal returns (BaseDAOInfo) {
-    uint length = baseInfos[msg.sender].length;
+    uint length = baseInfosCount[msg.sender];
 
-    if (length <= _index) {
-      if (length+1 != _index) {
+    if (length > _index) {
+      return baseInfos[msg.sender][_index];
+    } else {
+      if (length != _index) {
         throw;
       }
 
@@ -111,11 +114,10 @@ contract Wings  {
           true
         );
 
-      baseInfos[msg.sender].push(baseInfo);
+      baseInfos[msg.sender][_index] = baseInfo;
+      baseInfosCount[msg.sender]++;
 
       return baseInfo;
-    } else {
-      return baseInfos[msg.sender][_index];
     }
   }
 
@@ -134,8 +136,9 @@ contract Wings  {
         throw;
       }
 
-      baseInfo.milestones = milestonesFactory.create(msg.sender, _cap);
+      baseInfo.milestones = milestonesFactory.create(address(this), msg.sender, _cap);
       baseInfo.reviewHours = _reviewHours;
+      baseInfos[msg.sender][_index] = baseInfo;
 
       return baseInfo.milestones;
   }
@@ -169,6 +172,10 @@ contract Wings  {
           _price,
           _rewardPercent
         );
+
+      baseInfos[msg.sender][_index] = baseInfo;
+
+      return baseInfo.crowdsale;
   }
 
   function createForecasting(
@@ -188,12 +195,15 @@ contract Wings  {
 
 
       baseInfo.forecasting = forecastingFactory.create(
+          address(this),
           _rewardPercent,
           baseInfo.milestones,
           baseInfo.crowdsale
         );
 
       baseInfo.forecastingHours = _forecastingHours;
+      baseInfos[msg.sender][_index] = baseInfo;
+
       return baseInfo.forecasting;
     }
 
@@ -204,17 +214,14 @@ contract Wings  {
   */
   function createDAO(uint _index,
                   string _name,
-                  bytes32 _infoHash,
-                  uint _reviewHours,
-                  uint _forecastingHours,
-                  uint _crowdsaleHours) public returns (address) {
+                  bytes32 _infoHash) public returns (address) {
     bytes32 _daoId = sha256(_name);
 
     if (daos[_daoId] != address(0)) {
       throw;
     }
 
-    if (baseInfos[msg.sender].length <= _index) {
+    if (baseInfosCount[msg.sender] < _index) {
       throw;
     }
 
@@ -230,6 +237,15 @@ contract Wings  {
           throw;
         }
 
+    uint startReviewTime = block.timestamp;
+    uint endReviewTime = startReviewTime + (baseInfo.reviewHours * 1 hours);
+    uint endForecastTime = endReviewTime + (baseInfo.forecastingHours * 1 hours);
+    uint endCrowdsaleTime = endForecastTime + (baseInfo.crowdsaleHours * 1 hours);
+
+    if (startReviewTime >= endReviewTime) {
+      throw;
+    }
+
     var dao = new DAO(
         _daoId,
         msg.sender,
@@ -238,6 +254,10 @@ contract Wings  {
         baseInfo.forecasting,
         baseInfo.crowdsale
     );
+
+    BasicMilestones(baseInfo.milestones).setTime(startReviewTime, endReviewTime);
+    BasicForecasting(baseInfo.forecasting).setTime(endReviewTime, endForecastTime);
+    BasicCrowdsale(baseInfo.crowdsale).setLimitations(endReviewTime, endForecastTime, endCrowdsaleTime);
 
     baseInfo.inProgress = false;
     daos[_daoId] = dao;

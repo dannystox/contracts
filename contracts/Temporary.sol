@@ -21,14 +21,6 @@ contract Temporary {
     _;
   }
 
-  modifier verifyTimestamps(uint _startTimestamp, uint _endTimestamp) {
-    if (startTimestamp >= endTimestamp) {
-      throw;
-    }
-
-    _;
-  }
-
   modifier onlyTimeManager {
     if (msg.sender != timeManager) {
       throw;
@@ -37,8 +29,12 @@ contract Temporary {
     _;
   }
 
-  function setTime(uint _s, uint _e) before() verifyTimestamps(_s, _e) onlyTimeManager() {
-    startTimestamp = _s;
-    endTimestamp = _e;
+  function setTime(uint _start, uint _end) public onlyTimeManager() before() {
+    if (_start >= _end) {
+      throw;
+    }
+
+    startTimestamp = _start;
+    endTimestamp = _end;
   }
 }

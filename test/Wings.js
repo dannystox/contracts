@@ -1,5 +1,6 @@
 const Wings = artifacts.require('../contracts/Wings.sol')
 const Token = artifacts.require('../contracts/Token.sol')
+
 const DAO = artifacts.require('../contracts/DAO.sol')
 
 const CrowdsaleFactory = artifacts.require('./crowdsales/CrowdsaleFactory.sol')
@@ -22,11 +23,19 @@ contract('Wings', () => {
 
   before('Deploy Wings To Network', () => {
     dao = {
-      name: chance.word(),
-      symbol: chance.word(),
+      owner: creator,
+      name: "Wings Awesome DAO",
+      symbol: "WINGS",
       infoHash: '0x' + crypto.randomBytes(32).toString('hex'),
       underCap: false,
-      reviewHours: chance.integer({min: 1, max: 504 })
+      reviewHours: chance.integer({min: 1, max: 504 }),
+      forecastHours: chance.integer({min: 120, max: 720 }),
+      rewardPercent: chance.integer({min: 1, max: 100000000 }),
+      crowdsaleHours: chance.integer({min: 168, max: 2016}),
+      rewardPercent: chance.integer({min: 1, max: 100000000}),
+      initialPrice: 200,
+      milestones: [],
+      forecasts: []
     }
 
     return Token.new(1, {
@@ -35,20 +44,33 @@ contract('Wings', () => {
       token = _token
 
       return Promise.join(
-        CrowdsaleFactory.new(),
-        ForecastingFactory.new(),
-        MilestonesFactory.new(),
-        (crowdsale, forecasting, milestones) => {
+        MilestonesFactory.new(token.address),
+        CrowdsaleFactory.new(token.address),
+        ForecastingFactory.new(token.address),
+        (milestones, crowdsale, forecasting) => {
           return Wings.new(token.address, milestones.address, crowdsale.address, forecasting.address)
         }
       ).then(_wings => {
         wings = _wings
+
+        return wings.createMilestones(0, dao.underCap, dao.reviewHours, {
+          from: creator
+        })
+      }).then(() => {
+
+        return wings.createCrowdsale(0, creator, dao.name, dao.symbol, dao.initialPrice, dao.rewardPercent, dao.crowdsaleHours, {
+          from: creator
+        })
+      }).then(() => {
+        return wings.createForecasting(0, dao.rewardPercent, dao.forecastHours, {
+          from: creator
+        })
       })
     })
   })
 
   it('Add DAO project', () => {
-    return wings.addDAO.sendTransaction(dao.name, dao.symbol, dao.infoHash, dao.underCap, dao.reviewHours, {
+    return wings.createDAO(0, dao.name, dao.infoHash, {
       from: creator
     }).then(() => {
       dao.id = '0x' + crypto.createHash('sha256').update(dao.name, 'utf8').digest().toString('hex')
@@ -68,17 +90,11 @@ contract('Wings', () => {
       return Promise.all([
         dao.owner.call(),
         dao.id.call(),
-        dao.name.call(),
-        dao.infoHash.call(),
-        dao.token.call(),
-        dao.reviewHours.call()
+        dao.infoHash.call()
       ], results => {
         assert.equal(results[0], dao.owner)
         assert.equal(results[1], dao.id)
-        assert.equal(results[2], dao.name)
-        assert.equal(results[3], dao.infoHash),
-        assert.equal(results[4], token.address),
-        assert.equal(results[5].toNumber(), dao.reviewHours)
+        assert.equal(results[3], dao.infoHash)
       })
     })
   })
