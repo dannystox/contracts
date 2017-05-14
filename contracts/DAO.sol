@@ -4,12 +4,14 @@ import "./DAOAbstraction.sol";
 
 contract DAO is DAOAbstraction {
   function DAO(
-      bytes32 _id,
+      address _timeManager,
       address _owner,
+      bytes32 _id,
       bytes32 _infoHash,
       address _milestones,
       address _forecasting,
       address _crowdsale)  {
+        timeManager = _timeManager;
         owner = _owner;
         id = _id;
         infoHash = _infoHash;
