@@ -284,7 +284,7 @@ contract('CrowdsaleFailed', () => {
         initialBalance = balance
         return crowdsale.transfer(recipient, balance)
       }).then(() => {
-        throw new Error('Should send JUMP error')
+        throw new Error('Should return JUMP error')
       }).catch(err => {
         assert.equal(errors.isJump(err.message), true)
       }).then(() => {

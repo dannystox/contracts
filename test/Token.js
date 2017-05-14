@@ -93,7 +93,7 @@ contract('Token', () => {
     return token.allocate.sendTransaction(account, toSend, {
       from: creator
     }).then(() => {
-      throw new Error('Code had to sent throw')
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -103,7 +103,7 @@ contract('Token', () => {
     return token.transfer.sendTransaction(web3.eth.accounts[1], toSend, {
       from: creator
     }).then(() => {
-      throw new Error('Code had to sent throw')
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -113,7 +113,7 @@ contract('Token', () => {
     return token.approve.sendTransaction(web3.eth.accounts[1], toSend, {
       from: creator
     }).then(() => {
-      throw new Error('Code had to sent throw')
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -148,7 +148,7 @@ contract('Token', () => {
     return token.allocate.sendTransaction(web3.eth.accounts[3], new BigNumber(toSend).mul(2), {
       from: creator
     }).then(() => {
-      throw new Error('Code had to sent throw')
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })

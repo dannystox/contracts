@@ -139,6 +139,8 @@ contract('Milestones', () => {
 
     return milestonesContract.add.sendTransaction(milestone.amount, milestone.items, {
       from: creator
+    }).then(() => {
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -218,7 +220,9 @@ contract('Milestones', () => {
       items: '0x' + crypto.randomBytes(32).toString('hex')
     }
 
-    return milestonesContract.remove(i).catch(err => {
+    return milestonesContract.remove(i).then(() => {
+      throw new Error('Should return JUMP error')
+    }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
 
       return milestonesContract.update(i, newMilestone.amount, newMilestone.items)

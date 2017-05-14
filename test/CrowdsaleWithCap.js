@@ -221,7 +221,7 @@ contract('CrowdsaleWithCap', () => {
         err? reject(err) : resolve()
       })
     }).then(() => {
-      throw new Error('Should send JUMP error')
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -304,7 +304,7 @@ contract('CrowdsaleWithCap', () => {
         err? reject(err) : resolve()
       })
     }).then(() => {
-      throw new Error('Should send JUMP error')
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
@@ -359,7 +359,7 @@ contract('CrowdsaleWithCap', () => {
     return crowdsale.payback({
       from: web3.eth.accounts[6]
     }).then(() => {
-      throw new Error('Shouldnt be here')
+      throw new Error('Should return JUMP error')
     }).catch(err => {
       assert.equal(errors.isJump(err.message), true)
     })
