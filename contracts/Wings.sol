@@ -247,14 +247,16 @@ contract Wings  {
     }
 
     var dao = new DAO(
-        _daoId,
+        address(this),
         msg.sender,
+        _daoId,
         _infoHash,
         baseInfo.milestones,
         baseInfo.forecasting,
         baseInfo.crowdsale
     );
 
+    dao.setTime(startReviewTime, endReviewTime);
     BasicMilestones(baseInfo.milestones).setTime(startReviewTime, endReviewTime);
     BasicForecasting(baseInfo.forecasting).setTime(endReviewTime, endForecastTime);
     BasicCrowdsale(baseInfo.crowdsale).setLimitations(endReviewTime, endForecastTime, endCrowdsaleTime);
