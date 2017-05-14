@@ -17,27 +17,40 @@ contract('Milestones', () => {
 
   let milestones = []
 
-  /*
-  .then(_milestones => {
-    milestones = _milestones
-
-    const start = currentTime
-    const end = start + 3600
-    return milestones.setLimitations.sendTransaction(start, end)
-  }
-  })
-*/
-
   before('Deploy Milestones & Forecasting', () => {
     return time.blockchainTime(web3).then(_time => {
       currentTime = _time
-      return Milestones.new(creator, false)
+      return Milestones.new(creator, creator, false)
     }).then(milestones => {
       milestonesContract = milestones
     })
   })
 
-  it('Should allow to add five milestones while it is pre-review mode', () => {
+  it('Shouldnt allow to add milestones before timestamps set', () => {
+    const milestone = {
+      amount: web3.toWei(chance.integer({min: 1, max: 1000}), 'ether'),
+      items: '0x' + crypto.randomBytes(32).toString('hex')
+    }
+
+    return milestonesContract.add(milestone.amount, milestone.items, {
+      from: creator
+    }).then(() => {
+      throw new Error('Should return JUMP error')
+    }).catch(err => {
+      assert.equal(errors.isJump(err.message), true)
+    })
+  })
+
+
+  it('Should set timestamps', () => {
+    const end = currentTime + 3600
+
+    return milestonesContract.setTime(currentTime, end, {
+      from: creator
+    })
+  })
+
+  it("Should add 5 milestones", () => {
     let promises = []
 
     for (let i = 0; i < 5; i++) {
@@ -85,16 +98,9 @@ contract('Milestones', () => {
     })
   })
 
-  it('Should set limitations for milestones', () => {
-    const end = currentTime + 3600
 
-    return milestonesContract.setLimitations.sendTransaction(currentTime, end)
-  })
-
-  it('Should move time', () => {
-    return time.move(web3, 0).then(() => {
-      return time.blockchainTime(web3)
-    }).then((time) => {
+  it('Should check timestamps', () => {
+    return time.blockchainTime(web3).then((time) => {
       return Promise.join(
         milestonesContract.startTimestamp.call(),
         milestonesContract.endTimestamp.call(),
