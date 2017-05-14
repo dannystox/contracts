@@ -1,6 +1,11 @@
 const Wings = artifacts.require('../contracts/Wings.sol')
 const Token = artifacts.require('../contracts/Token.sol')
 const DAO = artifacts.require('../contracts/DAO.sol')
+
+const CrowdsaleFactory = artifacts.require('./crowdsales/CrowdsaleFactory.sol')
+const ForecastingFactory = artifacts.require('./forecasts/ForecastingFactory.sol')
+const MilestonesFactory = artifacts.require('./milestones/MilestonesFactory.sol')
+
 const Promise = require('bluebird')
 const Chance = require('chance')
 const time = require('../helpers/time')
@@ -29,13 +34,16 @@ contract('Wings', () => {
     }).then(_token => {
       token = _token
 
-      console.log('got token')
-      console.log('deploy wings')
-      return Wings.new(token.address).then(_wings => {
+      return Promise.join(
+        CrowdsaleFactory.new(),
+        ForecastingFactory.new(),
+        MilestonesFactory.new(),
+        (crowdsale, forecasting, milestones) => {
+          return Wings.new(token.address, milestones.address, crowdsale.address, forecasting.address)
+        }
+      ).then(_wings => {
         wings = _wings
       })
-    }).then(() => {
-      console.log('done')
     })
   })
 

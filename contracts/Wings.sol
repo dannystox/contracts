@@ -1,6 +1,5 @@
 pragma solidity ^0.4.8;
 
-import "./DAOAbstraction.sol";
 import "./DAO.sol";
 
 contract Wings  {
@@ -31,13 +30,26 @@ contract Wings  {
   address public creator;
 
   /*
-    Wings Token Address
+    Contracts
   */
   address public token;
 
-  function Wings(address _token) {
+  address public milestonesFactory;
+  address public crowdsaleFactory;
+  address public forecastingFactory;
+
+  function Wings(
+      address _token,
+      address _milestonesFactory,
+      address _crowdsaleFactory,
+      address _forecastingFactory
+  ) {
     token = _token;
     creator = msg.sender;
+
+    milestonesFactory = _milestonesFactory;
+    crowdsaleFactory = _crowdsaleFactory;
+    forecastingFactory = _forecastingFactory;
   }
 
   /*
@@ -50,7 +62,17 @@ contract Wings  {
       throw;
     }
 
-    var dao = new DAO(msg.sender, _name, _symbol, _infoHash, _underCap, _reviewHours, token);
+    var dao = new DAO(
+        msg.sender,
+        _name,
+        _symbol,
+        _infoHash,
+        _underCap,
+        _reviewHours,
+        token,
+        milestonesFactory,
+        crowdsaleFactory,
+        forecastingFactory);
 
     daos[_daoId] = dao;
     daosIds[totalDAOsCount++] = _daoId;

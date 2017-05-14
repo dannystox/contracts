@@ -1,8 +1,6 @@
 pragma solidity ^0.4.8;
 
 import "./DAOAbstraction.sol";
-import "./milestones/BasicMilestones.sol";
-import "./forecasts/BasicForecasting.sol";
 
 contract DAO is DAOAbstraction {
   function DAO(
@@ -12,7 +10,10 @@ contract DAO is DAOAbstraction {
       bytes32 _infoHash,
       bool _underCap,
       uint _reviewHours,
-      address _token) checkReviewHours(_reviewHours)  {
+      address _token,
+      address _milestonesFactory,
+      address _forecastingFactory,
+      address _crowdsaleFactory) checkReviewHours(_reviewHours)  {
         owner = _owner;
         id = sha256(_name);
         name = _name;
@@ -23,13 +24,16 @@ contract DAO is DAOAbstraction {
         reviewHours = _reviewHours;
         token = _token;
 
-        milestones = new BasicMilestones(msg.sender, _underCap);
+        milestonesFactory = MilestonesFactory(_milestonesFactory);
+        forecastingFactory = ForecastingFactory(_forecastingFactory);
+        crowdsaleFactory = CrowdsaleFactory(_crowdsaleFactory);
+
+        milestones = milestonesFactory.create(_owner, _underCap);
   }
 
   /*
     Start DAO process
   */
-  //onlyOwner() isStarted(false) checkForecastHours(_forecastHours) checkCrowdsaleHours(_crowdsaleHours)
   function start(
       uint _forecastHours,
       uint _crowdsaleHours,
@@ -37,7 +41,9 @@ contract DAO is DAOAbstraction {
       uint _initialPrice,
       uint _rewardPercent
     ) onlyOwner() isStarted(false) checkForecastHours(_forecastHours) {
-      if (underCap && milestones.milestonesCount() < 1) {
+      var milestonesInst = BasicMilestones(milestones);
+
+      if (underCap && milestonesInst.milestonesCount() < 1) {
         throw;
       }
 
@@ -47,13 +53,32 @@ contract DAO is DAOAbstraction {
       uint _startTimestamp = startTimestamp + (reviewHours * 1 hours);
       uint _endTimestamp = _startTimestamp + (_forecastHours * 1 hours);
 
-      crowdsale = new BasicCrowdsale(msg.sender, address(0), _multisig, name, symbol, milestones, _initialPrice, _rewardPercent);
-      forecasting = new BasicForecasting(_startTimestamp, _endTimestamp, _rewardPercent, token, milestones, address(0), underCap);
+      crowdsale = crowdsaleFactory.create(
+          owner,
+          address(this),
+          _multisig,
+          name,
+          symbol,
+          milestones,
+          _initialPrice,
+          _rewardPercent
+        );
 
-      crowdsale.setForecasting(forecasting);
-      crowdsale.setLimitations(_startTimestamp, _endTimestamp, (_endTimestamp + (_crowdsaleHours * 1 hours)));
+      forecasting = forecastingFactory.create(
+          _startTimestamp,
+          _endTimestamp,
+          _rewardPercent,
+          token,
+          milestones,
+          crowdsale,
+          underCap
+        );
 
-      milestones.setLimitations(startTimestamp, startTimestamp + reviewHours * 1 hours);
+      var crowdsaleInst = BasicCrowdsale(crowdsale);
+
+      crowdsaleInst.setForecasting(forecasting);
+      crowdsaleInst.setLimitations(_startTimestamp, _endTimestamp, (_endTimestamp + (_crowdsaleHours * 1 hours)));
+      milestonesInst.setLimitations(startTimestamp, startTimestamp + reviewHours * 1 hours);
   }
 
   /*

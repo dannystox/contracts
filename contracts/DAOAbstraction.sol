@@ -1,9 +1,9 @@
 pragma solidity ^0.4.8;
 
 import "./zeppelin/Ownable.sol";
-import "./milestones/MilestonesAbstraction.sol";
-import "./forecasts/ForecastingAbstraction.sol";
-import "./crowdsales/BasicCrowdsale.sol";
+import "./milestones/MilestonesFactory.sol";
+import "./forecasts/ForecastingFactory.sol";
+import "./crowdsales/CrowdsaleFactory.sol";
 
 contract DAOAbstraction is Ownable {
   bytes32 public id; // id of project
@@ -24,11 +24,15 @@ contract DAOAbstraction is Ownable {
   uint public startTimestamp; // time of DAO start activity
 
   /*
-    Contracts
+    Factories
   */
-  MilestonesAbstraction public milestones;
-  ForecastingAbstraction public forecasting;
-  BasicCrowdsale public crowdsale;
+  MilestonesFactory public milestonesFactory;
+  ForecastingFactory public forecastingFactory;
+  CrowdsaleFactory public crowdsaleFactory;
+
+  address public milestones;
+  address public forecasting;
+  address public crowdsale;
 
   modifier isStarted(bool _value) {
     if (_value == true) {

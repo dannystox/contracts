@@ -1,9 +1,16 @@
 const BigNumber = require('bignumber.js')
 const Promise = require('bluebird')
+
+const CrowdsaleFactory = artifacts.require('./crowdsales/CrowdsaleFactory.sol')
+const ForecastingFactory = artifacts.require('./forecasts/ForecastingFactory.sol')
+const MilestonesFactory = artifacts.require('./milestones/MilestonesFactory.sol')
+
 const DAO = artifacts.require("../contracts/DAO.sol")
 const Token = artifacts.require("../contracts/Token.sol")
+
 const Milestones = artifacts.require("../contracts/milestones/BasicMilestones.sol")
 const Forecasting = artifacts.require("../contracts/forecasts/BasicForecasting.sol")
+
 const crypto = require('crypto')
 const Chance = require('chance')
 const parser = require('../helpers/parser')
@@ -30,6 +37,9 @@ contract('DAO', () => {
       reviewHours: chance.integer({min: 1, max: 504 }),
       forecastHours: chance.integer({min: 120, max: 720 }),
       rewardPercent: chance.integer({min: 1, max: 100000000 }),
+      crowdsaleHours: chance.integer({min: 168, max: 2016}),
+      rewardPercent: chance.integer({min: 1, max: 100000000}),
+      initialPrice: 200,
       milestones: [],
       forecasts: []
     }
@@ -48,9 +58,32 @@ contract('DAO', () => {
     }).then(_token => {
       token = _token
 
-      return DAO.new(daoInfo.owner, daoInfo.name, daoInfo.symbol, daoInfo.infoHash, daoInfo.underCap, daoInfo.reviewHours, token.address,  {
-        from: creator
-      })
+      /*
+      address _milestonesFactory,
+      address _forecastingFactory,
+      address _crowdsaleFactory
+      */
+      return Promise.join(
+        CrowdsaleFactory.new(),
+        ForecastingFactory.new(),
+        MilestonesFactory.new(),
+        (crowdsale, forecasting, milestones) => {
+            return DAO.new(
+                daoInfo.owner,
+                daoInfo.name,
+                daoInfo.symbol,
+                daoInfo.infoHash,
+                daoInfo.underCap,
+                daoInfo.reviewHours,
+                token.address,
+                milestones.address,
+                forecasting.address,
+                crowdsale.address,
+                {
+                  from: creator
+                })
+        }
+      )
     }).then(_dao => {
       console.log('got dao')
       dao = _dao
@@ -157,8 +190,30 @@ contract('DAO', () => {
   })
 
   it('Should allow to start DAO', () => {
-    return dao.start.sendTransaction(daoInfo.forecastHours, daoInfo.rewardPercent, {
-      from: creator
+    /*
+      uint _forecastHours,
+      uint _crowdsaleHours,
+      address _multisig,
+      uint _initialPrice,
+      uint _rewardPercent
+    */
+    console.log(
+      daoInfo.forecastHours,
+      daoInfo.crowdsaleHours,
+      creator,
+      daoInfo.initialPrice,
+      daoInfo.rewardPercent
+    )
+    return dao.start(
+      daoInfo.forecastHours,
+      daoInfo.crowdsaleHours,
+      creator,
+      daoInfo.initialPrice,
+      daoInfo.rewardPercent,
+      {
+        from: creator
+    }).then(result => {
+      console.log(result)
     })
   })
 
