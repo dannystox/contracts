@@ -1,14 +1,9 @@
 pragma solidity ^0.4.11;
 
+import "./Factory.sol";
 import "../Crowdsale.sol";
 
-contract CrowdsaleFactory {
-  address public token;
-
-  function CrowdsaleFactory(address _token) {
-    token = _token;
-  }
-
+contract CrowdsaleFactory is Factory {
   function create(
       address _owner,
       address _parent,

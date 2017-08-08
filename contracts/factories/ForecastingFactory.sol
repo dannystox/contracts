@@ -1,14 +1,9 @@
 pragma solidity ^0.4.11;
 
+import "./Factory.sol";
 import "../Forecasting.sol";
 
-contract ForecastingFactory {
-  address public token;
-
-  function ForecastingFactory(address _token) {
-    token = _token;
-  }
-
+contract ForecastingFactory is Factory {
   function create(
       address _timeManager,
       uint _rewardPercent,
