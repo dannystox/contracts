@@ -1,6 +1,6 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import "./BasicCrowdsale.sol";
+import "../Crowdsale.sol";
 
 contract CrowdsaleFactory {
   address public token;
@@ -19,7 +19,7 @@ contract CrowdsaleFactory {
       uint _price,
       uint _rewardPercent
     ) public returns (address) {
-      var crowdsale = new BasicCrowdsale(
+      var crowdsale = new Crowdsale(
           _owner,
           _parent,
           _multisig,

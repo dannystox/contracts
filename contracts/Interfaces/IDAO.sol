@@ -1,9 +1,9 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import "./zeppelin/Ownable.sol";
-import "./Temporary.sol";
+import "../zeppelin/Ownable.sol";
+import "../helpers/Temporary.sol";
 
-contract DAOAbstraction is Ownable, Temporary  {
+contract IDAO is Ownable, Temporary  {
   bytes32 public id; // id of project
   bytes32 public infoHash; // information hash of project
 

@@ -1,9 +1,9 @@
 pragma solidity ^0.4.8;
 
 import "./DAO.sol";
-import "./milestones/MilestonesFactory.sol";
-import "./forecasts/ForecastingFactory.sol";
-import "./crowdsales/CrowdsaleFactory.sol";
+import "./factories/MilestonesFactory.sol";
+import "./factories/ForecastingFactory.sol";
+import "./factories/CrowdsaleFactory.sol";
 
 contract Wings  {
   event DAO_ADD(bytes32 indexed id, address owner);
@@ -259,10 +259,10 @@ contract Wings  {
     );
 
     dao.setTime(startReviewTime, endReviewTime);
-    BasicMilestones(baseInfo.milestones).setTime(startReviewTime, endReviewTime);
-    BasicForecasting(baseInfo.forecasting).setTime(endReviewTime, endForecastTime);
-    BasicCrowdsale(baseInfo.crowdsale).setLimitations(endReviewTime, endForecastTime, endCrowdsaleTime);
-    BasicCrowdsale(baseInfo.crowdsale).setForecasting(baseInfo.forecasting);
+    Milestones(baseInfo.milestones).setTime(startReviewTime, endReviewTime);
+    Forecasting(baseInfo.forecasting).setTime(endReviewTime, endForecastTime);
+    Crowdsale(baseInfo.crowdsale).setLimitations(endReviewTime, endForecastTime, endCrowdsaleTime);
+    Crowdsale(baseInfo.crowdsale).setForecasting(baseInfo.forecasting);
 
     baseInfo.inProgress = false;
     daos[_daoId] = dao;

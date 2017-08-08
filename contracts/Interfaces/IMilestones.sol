@@ -1,13 +1,13 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "../zeppelin/Ownable.sol";
 import "../zeppelin/SafeMath.sol";
-import "../Temporary.sol";
+import "../helpers/Temporary.sol";
 
 /*
   Basic milestones contract
 */
-contract MilestonesAbstraction is Ownable, SafeMath, Temporary {
+contract IMilestones is Ownable, SafeMath, Temporary {
     /*
       Milestone structure
     */

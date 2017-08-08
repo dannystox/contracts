@@ -1,10 +1,10 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
+import "./IMilestones.sol";
 import "../zeppelin/token/StandardToken.sol";
-import "../milestones/MilestonesAbstraction.sol";
 import "../zeppelin/Ownable.sol";
 
-contract CrowdsaleAbstraction is StandardToken, Ownable {
+contract ICrowdsale is StandardToken, Ownable {
   /*
     Only parent
   */
@@ -148,7 +148,7 @@ contract CrowdsaleAbstraction is StandardToken, Ownable {
   /*
     Contract where milestones placed
   */
-  MilestonesAbstraction public milestones;
+  IMilestones public milestones;
 
   /*
     Contract where forecasting placed

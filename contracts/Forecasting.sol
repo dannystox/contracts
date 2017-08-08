@@ -1,14 +1,14 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import "./ForecastingAbstraction.sol";
-import "../milestones/BasicMilestones.sol";
+import "./interfaces/IForecasting.sol";
+import "./interfaces/IMilestones.sol";
 
-contract BasicForecasting is ForecastingAbstraction {
+contract Forecasting is IForecasting {
   event ADD_FORECAST(address indexed account, uint amount, address forecast);
   /*
     Lock tokens here in forecast contract?
   */
-  function BasicForecasting(address _timeManager,
+  function Forecasting(address _timeManager,
                             uint _rewardPercent,
                             address _token,
                             address _milestones,
@@ -17,7 +17,7 @@ contract BasicForecasting is ForecastingAbstraction {
     timeManager = _timeManager;
     rewardPercent = _rewardPercent;
     token = Token(_token);
-    milestones = BasicMilestones(_milestones);
+    milestones = IMilestones(_milestones);
     crowdsale = _crowdsale;
   }
 

@@ -1,11 +1,11 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 import "../zeppelin/Ownable.sol";
 import "../Token.sol";
-import "../milestones/MilestonesAbstraction.sol";
-import "../Temporary.sol";
+import "../helpers/Temporary.sol";
+import "./IMilestones.sol";
 
-contract ForecastingAbstraction is Ownable, Temporary {
+contract IForecasting is Ownable, Temporary {
   /*
     Allow 6 numbers after dot.
   */
@@ -45,7 +45,7 @@ contract ForecastingAbstraction is Ownable, Temporary {
   /*
     Milestones
   */
-  MilestonesAbstraction public milestones;
+  IMilestones public milestones;
 
   /*
     Crowdsale

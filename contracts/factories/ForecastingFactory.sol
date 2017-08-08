@@ -1,6 +1,6 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import "./BasicForecasting.sol";
+import "../Forecasting.sol";
 
 contract ForecastingFactory {
   address public token;
@@ -15,7 +15,7 @@ contract ForecastingFactory {
       address _milestones,
       address _crowdsale
     ) public returns (address) {
-      var forecasting = new BasicForecasting(
+      var forecasting = new Forecasting(
           _timeManager,
           _rewardPercent,
           token,

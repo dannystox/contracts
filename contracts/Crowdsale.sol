@@ -1,13 +1,13 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import "./CrowdsaleAbstraction.sol";
-import "../milestones/BasicMilestones.sol";
+import "./interfaces/ICrowdsale.sol";
+import "./interfaces/IMilestones.sol";
 
 /*
   Basic Crodwsale Class
 */
-contract BasicCrowdsale is CrowdsaleAbstraction {
-  function BasicCrowdsale(
+contract Crowdsale is ICrowdsale {
+  function Crowdsale(
     address _owner,
     address _parent,
     address _multisig,
@@ -20,7 +20,7 @@ contract BasicCrowdsale is CrowdsaleAbstraction {
       parent = _parent;
       name = _name;
       symbol = _symbol;
-      milestones = BasicMilestones(_milestones);
+      milestones = IMilestones(_milestones);
       price = _price;
       multisig = _multisig;
       cap = milestones.cap();

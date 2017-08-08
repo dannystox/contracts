@@ -1,8 +1,8 @@
 pragma solidity ^0.4.8;
 
-import "./DAOAbstraction.sol";
+import "./interfaces/IDAO.sol";
 
-contract DAO is DAOAbstraction {
+contract DAO is IDAO {
   event DAO_PUBLISH(bytes32 indexed id, bytes32 _infoHash);
   event DAO_UPDATE_INFO(bytes32 indexed id, bytes32 _infoHash);
 

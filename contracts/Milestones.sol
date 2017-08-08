@@ -1,12 +1,12 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import "./MilestonesAbstraction.sol";
+import "./interfaces/IMilestones.sol";
 
 /*
   Basic Milestone implementation
 */
-contract BasicMilestones is MilestonesAbstraction {
-  function BasicMilestones(address _timeManager, address _owner, bool _cap) {
+contract Milestones is IMilestones {
+  function Milestones(address _timeManager, address _owner, bool _cap) {
     timeManager = _timeManager;
     owner = _owner;
     cap = _cap;

@@ -1,6 +1,6 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import "./BasicMilestones.sol";
+import "../Milestones.sol";
 
 contract MilestonesFactory {
   address public token;
@@ -10,7 +10,7 @@ contract MilestonesFactory {
   }
 
   function create(address _timeManager, address _owner, bool _cap) public returns (address) {
-      var milestones = new BasicMilestones(_timeManager, _owner, _cap);
+      var milestones = new Milestones(_timeManager, _owner, _cap);
       return milestones;
   }
 }
