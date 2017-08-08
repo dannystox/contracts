@@ -10,10 +10,7 @@ contract ICrowdsale is StandardToken, Ownable {
     Only parent
   */
   modifier onlyParent() {
-    if (msg.sender != parent) {
-      throw;
-    }
-
+    require(msg.sender == parent);
     _;
   }
 
@@ -23,11 +20,8 @@ contract ICrowdsale is StandardToken, Ownable {
   modifier checkCap() {
     if (cap == true) {
       uint afterFund = msg.value.add(totalCollected);
-      if (afterFund <= milestones.totalAmount()) {
-        _;
-      } else {
-        throw;
-      }
+      require(afterFund <= milestones.totalAmount());
+      _;
     } else {
       _;
     }
@@ -37,10 +31,8 @@ contract ICrowdsale is StandardToken, Ownable {
     It's possible to change condition
   */
   modifier isPossibleToModificate() {
-    if (lockDataTimestamp != 0 && block.timestamp > lockDataTimestamp) {
-      throw;
-    }
-
+    require(lockDataTimestamp != 0);
+    require(block.timestamp > lockDataTimestamp);
     _;
   }
 
@@ -48,11 +40,9 @@ contract ICrowdsale is StandardToken, Ownable {
     Crowdsale failed
   */
   modifier isCrowdsaleFailed() {
-    if (endTimestamp < block.timestamp && isMinimalReached() == false) {
-      _;
-    } else {
-      throw;
-    }
+    require(endTimestamp < block.timestamp);
+    require(isMinimalReached() == false);
+    _;
   }
 
   /*
@@ -60,33 +50,24 @@ contract ICrowdsale is StandardToken, Ownable {
   */
   modifier isCrowdsaleCompleted() {
     bool inTime = endTimestamp != 0 && endTimestamp < block.timestamp;
-
-    if (isCapReached() == true || (inTime == true && isMinimalReached() == true)) {
-        _;
-      } else {
-        throw;
-      }
+    require(isCapReached() == true || (inTime == true && isMinimalReached() == true));
+    _;
   }
 
   /*
     Crowdsale alive
   */
   modifier isCrowdsaleAlive() {
-    if ((startTimestamp < block.timestamp && endTimestamp > block.timestamp) && isCapReached() == false) {
-        _;
-    } else {
-      throw;
-    }
+    require((startTimestamp < block.timestamp && endTimestamp > block.timestamp));
+    require(isCapReached() == false);
+    _;
   }
 
   /*
     Only forecaster
   */
   modifier onlyForecasting() {
-    if (msg.sender != address(forecasting)) {
-      throw;
-    }
-
+    require(msg.sender == address(forecasting));
     _;
   }
 
@@ -204,12 +185,12 @@ contract ICrowdsale is StandardToken, Ownable {
   /*
     Set timestamp limitations
   */
-  function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyParent() isPossibleToModificate();
+  function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) public onlyParent() isPossibleToModificate();
 
   /*
     Set forecasting contract
   */
-  function setForecasting(address _forecasting) onlyParent() isPossibleToModificate();
+  function setForecasting(address _forecasting) public onlyParent() isPossibleToModificate();
 
   /*
       Vesting
@@ -218,27 +199,27 @@ contract ICrowdsale is StandardToken, Ownable {
   /*
     Add vesting account
   */
-  function addVestingAccount(address _account, uint _initialPayment, uint _payment) onlyOwner() isPossibleToModificate();
+  function addVestingAccount(address _account, uint _initialPayment, uint _payment) public onlyOwner() isPossibleToModificate();
 
   /*
     Add vesting allocation
   */
-  function addVestingAllocation(address _account, uint _timestamp) onlyOwner() isPossibleToModificate();
+  function addVestingAllocation(address _account, uint _timestamp) public onlyOwner() isPossibleToModificate();
 
   /*
     Release vesting allocation
   */
-  function releaseVestingAllocation() isCrowdsaleCompleted();
+  function releaseVestingAllocation() public isCrowdsaleCompleted();
 
   /*
     Get vesting account
   */
-  function getVestingAccount(address _account) constant returns (uint, uint, uint);
+  function getVestingAccount(address _account) public constant returns (uint, uint, uint);
 
   /*
     Get vesting
   */
-  function getVestingAllocation(address _account, uint _index) constant returns (uint);
+  function getVestingAllocation(address _account, uint _index) public constant returns (uint);
 
   /*
     Bonuses
@@ -247,7 +228,7 @@ contract ICrowdsale is StandardToken, Ownable {
   /*
     Add price change
   */
-  function addPriceChange(uint _timestamp, uint _price) onlyOwner() isPossibleToModificate();
+  function addPriceChange(uint _timestamp, uint _price) onlyOwner() public isPossibleToModificate();
 
 
   /*
@@ -257,7 +238,7 @@ contract ICrowdsale is StandardToken, Ownable {
   /*
     Give reward to forecaster based on percent from reward percent
   */
-  function giveReward(address _account, uint _amount) onlyForecasting() isCrowdsaleCompleted();
+  function giveReward(address _account, uint _amount) public onlyForecasting() isCrowdsaleCompleted();
 
   /*
     ETH functions (Payable)
@@ -266,20 +247,20 @@ contract ICrowdsale is StandardToken, Ownable {
   /*
     Withdraw ETH
   */
-  function withdraw(uint _amount) payable onlyOwner() isCrowdsaleCompleted();
+  function withdraw(uint _amount) public onlyOwner() isCrowdsaleCompleted();
 
   /*
     Payback (only if crowdsale is not success)
   */
-  function payback() payable isCrowdsaleFailed();
+  function payback() public isCrowdsaleFailed();
 
   /*
     Is cap reached (if there is cap)
   */
-  function isCapReached() constant returns (bool);
+  function isCapReached() public constant returns (bool);
 
   /*
     Is minimal goal reached (if there is minimal goal)
   */
-  function isMinimalReached() constant returns (bool);
+  function isMinimalReached() public constant returns (bool);
 }

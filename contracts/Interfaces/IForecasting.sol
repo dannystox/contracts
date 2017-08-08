@@ -11,10 +11,8 @@ contract IForecasting is Ownable, Temporary {
     Allow 6 numbers after dot.
   */
   modifier isValidRewardPercent(uint _rewardPercent) {
-    if (_rewardPercent > 100000000 || _rewardPercent == 0) {
-      throw;
-    }
-
+    require(_rewardPercent < 100000000);
+    require(_rewardPercent > 0);
     _;
   }
 

@@ -27,7 +27,7 @@ contract DAO is IDAO {
   /*
     Update project data
   */
-  function update(bytes32 _infoHash) onlyOwner() inTime() {
+  function update(bytes32 _infoHash) public onlyOwner() inTime() {
     infoHash = _infoHash;
     DAO_UPDATE_INFO(id, infoHash);
   }

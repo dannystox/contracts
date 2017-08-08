@@ -16,9 +16,8 @@ contract Milestones is IMilestones {
     Adding milestones
   */
   function add(uint amount, bytes32 items) onlyOwner() inTime() {
-    if (milestonesCount == MAX_COUNT || amount < 1) {
-      throw;
-    }
+    require(milestonesCount < MAX_COUNT);
+    require(amount > 0);
 
     var milestone = Milestone(block.timestamp, block.timestamp, amount, items, false);
     milestones[milestonesCount++] = milestone;
@@ -29,9 +28,7 @@ contract Milestones is IMilestones {
     Updating milestones
   */
   function update(uint index, uint amount, bytes32 items) onlyOwner() inTime() {
-    if (amount < 1) {
-      throw;
-    }
+    require(amount > 0);
 
     var milestone = milestones[index];
 
@@ -48,13 +45,11 @@ contract Milestones is IMilestones {
     Removing milestones
   */
   function remove(uint index) onlyOwner() inTime() {
-    if (cap && milestonesCount == 1) {
-      throw;
+    if (cap) {
+      require(milestonesCount > 1);
     }
 
-    if (index > milestonesCount) {
-      throw;
-    }
+    require(index < milestonesCount);
 
     totalAmount = totalAmount.sub(milestones[index].amount);
 

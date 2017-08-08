@@ -15,31 +15,25 @@ contract IDAO is Ownable, Temporary  {
   address public crowdsale;
 
   modifier checkReviewHours(uint _hours) {
-    if (_hours < 1 || _hours > 504) {
-      throw;
-    }
-
+    require(_hours > 1);
+    require(_hours < 504);
     _;
   }
 
   modifier checkForecastHours(uint _hours) {
-    if (_hours < 120 || _hours > 720) {
-      throw;
-    }
-
+    require(_hours >= 120);
+    require(_hours < 720);
     _;
   }
 
   modifier checkCrowdsaleHours(uint _hours) {
-    if (_hours < 168 || _hours > 2016) {
-      throw;
-    }
-
+    require(_hours >= 168);
+    require(_hours < 2016);
     _;
   }
 
   /*
     Update project data
   */
-  function update(bytes32 _infoHash) onlyOwner() inTime();
+  function update(bytes32 _infoHash) public onlyOwner() inTime();
 }

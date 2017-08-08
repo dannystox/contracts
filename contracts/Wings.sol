@@ -9,26 +9,20 @@ contract Wings  {
   event DAO_ADD(bytes32 indexed id, address owner);
 
   modifier isValidReviewHours(uint _reviewHours) {
-    if (_reviewHours < 1 || _reviewHours > 504) {
-      throw;
-    }
-
+    require(_reviewHours >= 1);
+    require(_reviewHours < 504);
     _;
   }
 
   modifier isValidForecastingHours(uint _forecastingHours) {
-    if (_forecastingHours < 120 || _forecastingHours > 720) {
-      throw;
-    }
-
+    require(_forecastingHours >= 120);
+    require(_forecastingHours < 720);
     _;
   }
 
   modifier isValidCrowdsaleHours(uint _crowdsaleHours) {
-    if (_crowdsaleHours < 168 || _crowdsaleHours > 2016) {
-      throw;
-    }
-
+    require(_crowdsaleHours >= 168);
+    require(_crowdsaleHours < 2016);
     _;
   }
 
@@ -102,10 +96,7 @@ contract Wings  {
     if (length > _index) {
       return baseInfos[msg.sender][_index];
     } else {
-      if (length != _index) {
-        throw;
-      }
-
+      require(length == _index);
       var baseInfo = BaseDAOInfo(
           address(0),
           address(0),
@@ -130,13 +121,8 @@ contract Wings  {
     ) public isValidReviewHours(_reviewHours) returns (address) {
       var baseInfo = getBaseInfo(_index);
 
-      if (!baseInfo.inProgress) {
-        throw;
-      }
-
-      if (baseInfo.milestones != address(0)) {
-        throw;
-      }
+      require(baseInfo.inProgress);
+      require(baseInfo.milestones == address(0));
 
       baseInfo.milestones = milestonesFactory.create(address(this), msg.sender, _cap);
       baseInfo.reviewHours = _reviewHours;
@@ -156,13 +142,9 @@ contract Wings  {
     ) public isValidCrowdsaleHours(_crowdsaleHours) returns (address) {
       var baseInfo = getBaseInfo(_index);
 
-      if (!baseInfo.inProgress) {
-        throw;
-      }
-
-      if (baseInfo.crowdsale != address(0) || baseInfo.milestones == address(0)) {
-        throw;
-      }
+      require(baseInfo.inProgress);
+      require(baseInfo.crowdsale == address(0));
+      require(baseInfo.milestones == address(0));
 
       baseInfo.crowdsale = crowdsaleFactory.create(
           msg.sender,
@@ -187,14 +169,10 @@ contract Wings  {
     ) public isValidForecastingHours(_forecastingHours) returns (address) {
       var baseInfo = getBaseInfo(_index);
 
-      if (!baseInfo.inProgress) {
-        throw;
-      }
-
-      if (baseInfo.forecasting != address(0) || baseInfo.milestones == address(0) || baseInfo.crowdsale == address(0)) {
-        throw;
-      }
-
+      require(baseInfo.inProgress);
+      require(baseInfo.forecasting == address(0));
+      require(baseInfo.milestones != address(0));
+      require(baseInfo.crowdsale != address(0));
 
       baseInfo.forecasting = forecastingFactory.create(
           address(this),
@@ -219,34 +197,22 @@ contract Wings  {
                   bytes32 _infoHash) public returns (address) {
     bytes32 _daoId = sha256(_name);
 
-    if (daos[_daoId] != address(0)) {
-      throw;
-    }
-
-    if (baseInfosCount[msg.sender] < _index) {
-      throw;
-    }
-
+    require(daos[_daoId] == address(0));
+    require(baseInfosCount[msg.sender] > _index);
     var baseInfo = baseInfos[msg.sender][_index];
 
-    if (!baseInfo.inProgress) {
-      throw;
-    }
 
-    if (baseInfo.milestones == address(0) ||
-        baseInfo.crowdsale == address(0) ||
-        baseInfo.forecasting == address(0)) {
-          throw;
-        }
+    require(baseInfo.inProgress);
+    require(baseInfo.milestones != address(0));
+    require(baseInfo.crowdsale != address(0));
+    require(baseInfo.forecasting != address(0));
 
     uint startReviewTime = block.timestamp;
     uint endReviewTime = startReviewTime + (baseInfo.reviewHours * 1 hours);
     uint endForecastTime = endReviewTime + (baseInfo.forecastingHours * 1 hours);
     uint endCrowdsaleTime = endForecastTime + (baseInfo.crowdsaleHours * 1 hours);
 
-    if (startReviewTime >= endReviewTime) {
-      throw;
-    }
+    require(startReviewTime < endReviewTime);
 
     var dao = new DAO(
         address(this),

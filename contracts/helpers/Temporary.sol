@@ -6,34 +6,24 @@ contract Temporary {
   address public timeManager;
 
   modifier inTime {
-    if (startTimestamp > block.timestamp || endTimestamp < block.timestamp) {
-      throw;
-    }
-
+    require(startTimestamp < block.timestamp);
+    require(endTimestamp > block.timestamp);
     _;
   }
 
   modifier before {
-    if (startTimestamp != 0 || endTimestamp != 0) {
-      throw;
-    }
-
+    require(startTimestamp == 0);
+    require(endTimestamp == 0);
     _;
   }
 
   modifier onlyTimeManager {
-    if (msg.sender != timeManager) {
-      throw;
-    }
-
+    require(msg.sender == timeManager);
     _;
   }
 
   function setTime(uint _start, uint _end) public onlyTimeManager() before() {
-    if (_start >= _end) {
-      throw;
-    }
-
+    require(_start < _end);
     startTimestamp = _start;
     endTimestamp = _end;
   }

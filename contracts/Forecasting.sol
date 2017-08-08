@@ -31,17 +31,13 @@ contract Forecasting is IForecasting {
           max = milestones.totalAmount();
         }
 
-        if (max < _amount) {
-          throw;
-        }
+        require(max < _amount);
     }
 
     /*
       Should allow us to lock Wings tokens.
     */
-    if (userForecasts[msg.sender].owner != address(0)) {
-      throw;
-    }
+    require(userForecasts[msg.sender].owner == address(0));
 
     var forecast = Forecast(
       msg.sender,
