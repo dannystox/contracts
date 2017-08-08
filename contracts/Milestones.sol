@@ -22,7 +22,7 @@ contract Milestones is IMilestones {
 
     var milestone = Milestone(block.timestamp, block.timestamp, amount, items, false);
     milestones[milestonesCount++] = milestone;
-    totalAmount = safeAdd(totalAmount, amount);
+    totalAmount = totalAmount.add(amount);
   }
 
   /*
@@ -35,13 +35,13 @@ contract Milestones is IMilestones {
 
     var milestone = milestones[index];
 
-    totalAmount = safeSub(totalAmount, milestone.amount);
+    totalAmount = totalAmount.sub(milestone.amount);
 
     milestone.amount = amount;
     milestone.items = items;
     milestone.updated_at = block.timestamp;
 
-    totalAmount = safeAdd(totalAmount, amount);
+    totalAmount = totalAmount.add(amount);
   }
 
   /*
@@ -56,7 +56,7 @@ contract Milestones is IMilestones {
       throw;
     }
 
-    totalAmount = safeSub(totalAmount, milestones[index].amount);
+    totalAmount = totalAmount.sub(milestones[index].amount);
 
     for (var i = index; i < milestonesCount-1; i++) {
       milestones[i] = milestones[i+1];

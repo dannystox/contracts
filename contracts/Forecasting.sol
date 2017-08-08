@@ -16,7 +16,7 @@ contract Forecasting is IForecasting {
                           ) isValidRewardPercent(_rewardPercent) {
     timeManager = _timeManager;
     rewardPercent = _rewardPercent;
-    token = Token(_token);
+    token = ERC20(_token);
     milestones = IMilestones(_milestones);
     crowdsale = _crowdsale;
   }

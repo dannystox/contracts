@@ -1,8 +1,9 @@
 pragma solidity ^0.4.11;
 
 import "./IMilestones.sol";
-import "../zeppelin/token/StandardToken.sol";
-import "../zeppelin/Ownable.sol";
+
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/token/StandardToken.sol";
 
 contract ICrowdsale is StandardToken, Ownable {
   /*
@@ -21,7 +22,7 @@ contract ICrowdsale is StandardToken, Ownable {
   */
   modifier checkCap() {
     if (cap == true) {
-      uint afterFund = safeAdd(msg.value, totalCollected);
+      uint afterFund = msg.value.add(totalCollected);
       if (afterFund <= milestones.totalAmount()) {
         _;
       } else {

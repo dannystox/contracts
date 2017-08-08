@@ -1,13 +1,15 @@
 pragma solidity ^0.4.11;
 
-import "../zeppelin/Ownable.sol";
-import "../zeppelin/SafeMath.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "../helpers/Temporary.sol";
 
 /*
   Basic milestones contract
 */
-contract IMilestones is Ownable, SafeMath, Temporary {
+contract IMilestones is Ownable, Temporary {
+    using SafeMath for uint;
     /*
       Milestone structure
     */

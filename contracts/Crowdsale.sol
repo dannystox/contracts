@@ -34,15 +34,15 @@ contract Crowdsale is ICrowdsale {
   }
 
   function createTokens(address recipient) internal isCrowdsaleAlive() checkCap() {
-    uint tokens = safeMul(msg.value, getPrice());
+    uint tokens = msg.value.mul(getPrice());
 
-    paritcipiants[recipient] = safeAdd(paritcipiants[recipient], msg.value);
+    paritcipiants[recipient] = paritcipiants[recipient].add(msg.value);
 
-    totalCollected = safeAdd(totalCollected, msg.value);
-    contractBalance = safeAdd(contractBalance, msg.value);
+    totalCollected = totalCollected.add(msg.value);
+    contractBalance = contractBalance.add(msg.value);
 
-    totalSupply = safeAdd(totalSupply, tokens);
-    balances[recipient] = safeAdd(balances[recipient], tokens);
+    totalSupply = totalSupply.add(tokens);
+    balances[recipient] = balances[recipient].add(tokens);
   }
 
   function setLimitations(uint _lockDataTimestamp, uint _startTimestamp, uint _endTimestamp) onlyParent() isPossibleToModificate() {
@@ -98,7 +98,7 @@ contract Crowdsale is ICrowdsale {
         0
       );
 
-    balances[_account] = safeAdd(balances[_account], _initialPayment);
+    balances[_account] = balances[_account].add(_initialPayment);
     vestingAccounts[_account] = vestingAccount;
   }
 
@@ -133,7 +133,7 @@ contract Crowdsale is ICrowdsale {
           continue;
         }
 
-        balances[vestingAccount.account] = safeAdd(balances[vestingAccount.account], vestingAccount.payment);
+        balances[vestingAccount.account] = balances[vestingAccount.account].add(vestingAccount.payment);
         vestingAccount.latestAllocation = i;
         vestingAccount.allocations[i] = 0;
       } else {
@@ -180,7 +180,7 @@ contract Crowdsale is ICrowdsale {
     Here we giving reward to account in percents
   */
   function giveReward(address _account, uint _amount) onlyForecasting() isCrowdsaleCompleted() {
-    balances[_account] = safeAdd(balances[_account], _amount);
+    balances[_account] = balances[_account].add(_amount);
   }
 
   /*

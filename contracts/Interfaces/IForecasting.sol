@@ -1,7 +1,8 @@
 pragma solidity ^0.4.11;
 
-import "../zeppelin/Ownable.sol";
-import "../Token.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/token/ERC20.sol";
+
 import "../helpers/Temporary.sol";
 import "./IMilestones.sol";
 
@@ -40,7 +41,7 @@ contract IForecasting is Ownable, Temporary {
   /*
     Token
   */
-  Token public token;
+  ERC20 public token;
 
   /*
     Milestones
